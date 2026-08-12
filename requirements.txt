@@ -1,0 +1,28 @@
+# Runtime dependencies. This is the file Vercel installs into the serverless
+# function, so it holds only what serving a request needs.
+#
+# Development and test tooling lives in requirements-dev.txt.
+
+fastapi>=0.111
+pydantic>=2.7
+SQLAlchemy>=2.0
+PyYAML>=6.0
+jsonschema>=4.20
+networkx>=3.2
+numpy>=1.26
+
+# PostgreSQL driver. Required for any deployment that must keep its data:
+# a serverless filesystem is wiped between cold starts.
+psycopg[binary]>=3.1
+
+# ASGI server for running locally (`python run.py`). Vercel supplies its own.
+uvicorn[standard]>=0.30
+
+# --- optional --------------------------------------------------------------
+# The unsupervised anomaly layer. scikit-learn pulls in scipy and costs about
+# 150MB unpacked, against Vercel's 250MB function limit. If a deployment hits
+# that ceiling, delete the line below: `app.services.anomaly` degrades cleanly,
+# reporting model version "1.0-unavailable" and contributing zero risk points,
+# and every rule-based control keeps working. `GET /api/health` reports
+# capabilities.anomaly_detection so you can see which mode is live.
+scikit-learn>=1.4

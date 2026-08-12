@@ -1,0 +1,321 @@
+# FINTRAC Sentinel - AML rule definitions
+#
+# Rules are configuration, not code.  Each entry binds a stable rule id and a
+# version to an `evaluator` implemented in app/services/rules_engine.py, plus the
+# thresholds that evaluator reads.  Changing a threshold means publishing a new
+# version with a new `effective_from`, so a historical case can always be
+# re-derived with the parameters that were in force when it was assessed.
+#
+# `score.base` is the contribution to the composite risk score when the rule
+# fires.  Contributions are additive and the total is capped at 100.
+#
+# IMPORTANT: these are AML/TF *indicators*.  An indicator is a red flag that can
+# contribute to a suspicion; it is not proof that money laundering occurred, and
+# no rule here decides on its own that a report must be filed.
+
+meta:
+  schema: 1
+  catalogue_version: "2026.08"
+
+rules:
+  # -------------------------------------------------------------------------
+  # Reporting-rule driven
+  # -------------------------------------------------------------------------
+  - id: AML-VC-012
+    version: "1.0"
+    name: 24-hour aggregated receipts reached the reporting threshold
+    category: threshold
+    severity: reporting
+    evaluator: aggregation_threshold
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Two or more virtual-currency receipts related to the same conductor,
+      beneficiary or third party totalled CAD 10,000 or more within a
+      consecutive 24-hour window, or a single receipt reached the threshold.
+      This is a reporting obligation, not by itself an indicator of suspicion.
+    inputs: {}
+    score:
+      base: 25
+
+  # -------------------------------------------------------------------------
+  # Transaction-size behaviour
+  # -------------------------------------------------------------------------
+  - id: AML-VC-002
+    version: "1.1"
+    name: Repeated receipts accumulating just below the reporting threshold
+    category: transaction_size
+    severity: medium
+    evaluator: near_threshold_accumulation
+    dedupe: daily
+    effective_from: "2026-05-01T00:00:00"
+    description: >
+      Several receipts aggregate to a value approaching but not reaching the
+      LVCTR threshold.  Threshold proximity alone is not proof of structuring;
+      it is one input within a holistic review.
+    inputs:
+      min_proximity: 0.85
+      min_transactions: 3
+    score:
+      base: 18
+
+  - id: AML-VC-004
+    version: "2.0"
+    name: Receipt volume far above the customer's own baseline
+    category: behavioural
+    severity: high
+    evaluator: baseline_deviation
+    dedupe: daily
+    effective_from: "2026-07-01T00:00:00"
+    description: >
+      Value received in the last 24 hours is a large multiple of the customer's
+      average *active-day* volume. v1.0 compared against an all-days average,
+      which is near zero for any low-frequency customer and made ordinary
+      deposits look like 30x deviations; it alerted on roughly a third of the
+      book. v2.0 also requires a minimum number of active days before the
+      comparator is considered meaningful.
+    inputs:
+      lookback_days: 90
+      min_multiple: 5.0
+      min_baseline_txns: 5
+      min_active_days: 3
+      min_window_cad: 5000
+    score:
+      base: 18
+
+  - id: AML-VC-004
+    version: "1.0"
+    name: Receipt volume far above the customer's own baseline
+    category: behavioural
+    severity: high
+    evaluator: baseline_deviation
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    effective_to: "2026-07-01T00:00:00"
+    description: >
+      Superseded by v2.0. Retained so cases assessed before 2026-07-01 remain
+      reproducible with the parameters that were in force.
+    inputs:
+      lookback_days: 90
+      min_multiple: 5.0
+      min_baseline_txns: 5
+      min_active_days: 0
+      min_window_cad: 2000
+    score:
+      base: 18
+
+  - id: AML-VC-015
+    version: "1.0"
+    name: Activity inconsistent with the customer's stated expected volume
+    category: customer_inconsistency
+    severity: medium
+    evaluator: expected_volume_breach
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Rolling 30-day received value materially exceeds the volume the customer
+      declared at onboarding for their occupation or line of business.
+    inputs:
+      window_days: 30
+      min_multiple: 3.0
+    score:
+      base: 14
+
+  - id: AML-VC-006
+    version: "1.0"
+    name: Dormant relationship suddenly active
+    category: behavioural
+    severity: medium
+    evaluator: dormant_reactivation
+    effective_from: "2026-01-01T00:00:00"
+    inputs:
+      dormant_days: 90
+      min_cad: 5000
+    score:
+      base: 12
+
+  # -------------------------------------------------------------------------
+  # Velocity
+  # -------------------------------------------------------------------------
+  - id: AML-VC-001
+    version: "2.1"
+    name: Rapid inbound activity from multiple distinct wallets
+    category: velocity
+    severity: medium
+    evaluator: rapid_multi_wallet_inbound
+    dedupe: daily
+    effective_from: "2026-06-01T00:00:00"
+    description: >
+      Multiple incoming virtual-currency transfers from several distinct sending
+      wallets within a short period.
+    inputs:
+      window_minutes: 60
+      min_unique_senders: 5
+      min_transactions: 5
+    score:
+      base: 18
+
+  - id: AML-VC-001
+    version: "1.0"
+    name: Rapid inbound activity from multiple distinct wallets
+    category: velocity
+    severity: medium
+    evaluator: rapid_multi_wallet_inbound
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    effective_to: "2026-06-01T00:00:00"
+    description: >
+      Superseded by v2.1, which tightened the sender count from 8 to 5 after
+      tuning against the Q1 alert population.  Retained so that cases assessed
+      before 2026-06-01 remain reproducible.
+    inputs:
+      window_minutes: 60
+      min_unique_senders: 8
+      min_transactions: 8
+    score:
+      base: 15
+
+  - id: AML-VC-003
+    version: "1.0"
+    name: Rapid pass-through of received virtual currency
+    category: velocity
+    severity: high
+    evaluator: rapid_pass_through
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Value received is moved out again almost immediately, leaving little or no
+      balance behind - consistent with the account being used as a conduit
+      rather than for its stated purpose.
+    inputs:
+      window_minutes: 180
+      min_outflow_ratio: 0.8
+      min_cad: 2000
+    score:
+      base: 20
+
+  - id: AML-VC-013
+    version: "1.0"
+    name: Rapid switching between virtual currencies (chain hopping)
+    category: obfuscation
+    severity: medium
+    evaluator: chain_hopping
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    inputs:
+      window_hours: 6
+      min_distinct_assets: 3
+    score:
+      base: 12
+
+  # -------------------------------------------------------------------------
+  # Counterparty / network
+  # -------------------------------------------------------------------------
+  - id: AML-VC-005
+    version: "1.2"
+    name: Exposure to a high-risk counterparty wallet
+    category: counterparty
+    severity: high
+    evaluator: high_risk_counterparty
+    effective_from: "2026-03-01T00:00:00"
+    description: >
+      A sending or receiving counterparty address carries a high-risk
+      classification from the configured blockchain-analytics source.
+    inputs:
+      min_external_risk: 70
+      escalating_tags: [mixer, tumbler, darknet_market, sanctioned, ransomware, high_risk_exchange]
+    score:
+      base: 22
+
+  - id: AML-VC-010
+    version: "1.0"
+    name: Fan-in - many unrelated sending wallets into one customer
+    category: network
+    severity: medium
+    evaluator: fan_in
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    inputs:
+      window_hours: 24
+      min_unique_senders: 6
+    score:
+      base: 15
+
+  - id: AML-VC-011
+    version: "1.0"
+    name: Circular movement of funds
+    category: network
+    severity: high
+    evaluator: circular_flow
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Value leaves the customer and returns through one or more intermediary
+      addresses, with no apparent economic purpose.
+    inputs:
+      window_hours: 72
+      max_hops: 4
+    score:
+      base: 20
+
+  - id: AML-VC-007
+    version: "1.0"
+    name: One wallet used by multiple customers
+    category: third_party
+    severity: high
+    evaluator: shared_wallet
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      The same external address transacts with more than one customer, which can
+      indicate an undisclosed third party controlling the funds.
+    inputs:
+      lookback_days: 30
+      min_customers: 2
+    score:
+      base: 16
+
+  - id: AML-VC-008
+    version: "1.0"
+    name: Beneficiary shared across apparently unrelated customers
+    category: third_party
+    severity: medium
+    evaluator: shared_beneficiary
+    effective_from: "2026-01-01T00:00:00"
+    inputs:
+      lookback_days: 7
+      min_customers: 2
+    score:
+      base: 14
+
+  - id: AML-VC-014
+    version: "1.0"
+    name: Receipts concentrated in newly observed addresses
+    category: obfuscation
+    severity: low
+    evaluator: new_address_concentration
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    inputs:
+      window_hours: 24
+      new_wallet_age_days: 7
+      min_value_share: 0.5
+      min_window_cad: 2000
+    score:
+      base: 10
+
+  # -------------------------------------------------------------------------
+  # Geography
+  # -------------------------------------------------------------------------
+  - id: AML-VC-009
+    version: "1.0"
+    name: Counterparty exposure to a higher-risk jurisdiction
+    category: geography
+    severity: medium
+    evaluator: high_risk_jurisdiction
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Jurisdiction lists are deployment configuration.  The placeholder list
+      below is illustrative only and must be replaced with the reporting
+      entity's own board-approved country-risk assessment.
+    inputs:
+      jurisdictions: [KP, IR, MM, SY, AF]
+    score:
+      base: 12

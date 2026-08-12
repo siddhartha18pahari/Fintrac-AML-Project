@@ -1,0 +1,23 @@
+# Never commit data or secrets. This file is a convenience, not a control -
+# see docs/SECURITY.md.
+data/
+*.db
+*.db-wal
+*.db-shm
+.env
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+.vercel/

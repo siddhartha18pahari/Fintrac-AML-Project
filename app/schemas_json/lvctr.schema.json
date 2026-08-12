@@ -1,0 +1,375 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.invalid/schemas/lvctr-2021.schema.json",
+  "title": "Large Virtual Currency Transaction Report (LVCTR) - 2021 JSON-LD upload format",
+  "description": "Structural schema reconstructed from the reference implementation at github.com/8KSS/FINTRAC-LVCTR (LVCTR_FORM2.HTML). This is NOT an official FINTRAC artefact and must be reconciled against FINTRAC's current technical documentation before any real submission.",
+  "type": "object",
+  "required": ["@context", "@type", "reportingEntityNumber", "reportReference", "details", "transactions"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "@context": { "type": "string", "format": "uri" },
+    "@type": { "const": "LvctrForm" },
+    "reportingEntityNumber": { "type": "string", "pattern": "^[0-9]{1,7}$" },
+    "reportReference": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "details": { "$ref": "#/definitions/formDetails" },
+    "definitions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/subjectDefinition" }
+    },
+    "transactions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/transaction" }
+    }
+  },
+
+  "definitions": {
+    "reference": {
+      "type": "object",
+      "required": ["$ref"],
+      "properties": { "$ref": { "type": "string", "maxLength": 32 } },
+      "additionalProperties": false
+    },
+
+    "amount": { "type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$" },
+
+    "dateTime": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+    },
+
+    "localDate": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+
+    "alpha2": { "type": "string", "pattern": "^[A-Z]{2}$" },
+
+    "alpha3": { "type": "string", "pattern": "^[A-Z]{3}$" },
+
+    "formDetails": {
+      "type": "object",
+      "required": ["@type", "activitySectorCode", "contactNumber"],
+      "properties": {
+        "@type": { "const": "LvctrFormDetails" },
+        "activitySectorCode": {
+          "type": "string",
+          "enum": ["1","2","3","4","5","6","9","10","11","12","13","14","15","16","17","18","19","20","21"]
+        },
+        "contactNumber": { "type": "string", "pattern": "^[0-9]+$" },
+        "ministerialDirectiveCode": { "type": "string", "maxLength": 10 },
+        "twentyFourHourAggregationTypeCode": { "type": "string", "enum": ["1", "2", "3", "4"] },
+        "twentyFourHourStartDateTime": { "$ref": "#/definitions/dateTime" },
+        "twentyFourHourEndDateTime": { "$ref": "#/definitions/dateTime" }
+      },
+      "additionalProperties": false
+    },
+
+    "structuredAddress": {
+      "type": "object",
+      "required": ["@type", "countryCode"],
+      "properties": {
+        "@type": { "const": "LvctrStructuredAddress" },
+        "unitNumber": { "type": "string", "maxLength": 10 },
+        "buildingNumber": { "type": "string", "maxLength": 10 },
+        "streetAddress": { "type": "string", "maxLength": 100 },
+        "city": { "type": "string", "maxLength": 100 },
+        "provinceCode": { "$ref": "#/definitions/alpha2" },
+        "provinceOther": { "type": "string", "maxLength": 100 },
+        "postalCode": { "type": "string", "maxLength": 20 },
+        "countryCode": { "$ref": "#/definitions/alpha2" },
+        "district": { "type": "string", "maxLength": 100 },
+        "locality": { "type": "string", "maxLength": 100 }
+      },
+      "additionalProperties": false
+    },
+
+    "identification": {
+      "type": "object",
+      "required": ["@type", "identificationTypeCode", "identificationNumber"],
+      "properties": {
+        "@type": {
+          "enum": ["LvctrPersonIdentificationDetails", "LvctrEntityIdentificationDetails"]
+        },
+        "identificationTypeCode": { "type": "string" },
+        "identificationTypeOther": { "type": "string", "maxLength": 200 },
+        "identificationNumber": { "type": "string", "maxLength": 50 },
+        "identificationJurisdictionCountryCode": { "$ref": "#/definitions/alpha2" },
+        "identificationJurisdictionProvinceCode": { "$ref": "#/definitions/alpha2" },
+        "identificationJurisdictionProvinceOther": { "type": "string", "maxLength": 100 }
+      },
+      "additionalProperties": false
+    },
+
+    "personDetails": {
+      "type": "object",
+      "required": ["$id", "@type", "surname", "givenName"],
+      "properties": {
+        "$id": { "type": "string", "maxLength": 32 },
+        "@type": { "const": "LvctrPersonDetails" },
+        "surname": { "type": "string", "maxLength": 100 },
+        "givenName": { "type": "string", "maxLength": 100 },
+        "other": { "type": "string", "maxLength": 100 },
+        "alias": { "type": "string", "maxLength": 100 },
+        "birthDate": { "$ref": "#/definitions/localDate" },
+        "occupation": { "type": "string", "maxLength": 200 },
+        "employerName": { "type": "string", "maxLength": 100 },
+        "telephoneNumber": { "type": "string", "maxLength": 20 },
+        "telephoneExtension": { "type": "string", "maxLength": 10 },
+        "residenceCountryCode": { "type": "string", "maxLength": 200 },
+        "address": {
+          "type": "object",
+          "properties": { "LvctrStructuredAddress": { "$ref": "#/definitions/structuredAddress" } },
+          "additionalProperties": false
+        },
+        "LvctrPersonIdentificationDetails": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/identification" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "entityDetails": {
+      "type": "object",
+      "required": ["$id", "@type", "legalName"],
+      "properties": {
+        "$id": { "type": "string", "maxLength": 32 },
+        "@type": { "const": "LvctrEntityDetails" },
+        "legalName": { "type": "string", "maxLength": 100 },
+        "businessNature": { "type": "string", "maxLength": 200 },
+        "telephoneNumber": { "type": "string", "maxLength": 20 },
+        "telephoneExtension": { "type": "string", "maxLength": 10 },
+        "registrationIndicator": { "type": "boolean" },
+        "registrationNumber": { "type": "string", "maxLength": 50 },
+        "registrationJurisdictionCountryCode": { "$ref": "#/definitions/alpha2" },
+        "registrationJurisdictionProvinceCode": { "$ref": "#/definitions/alpha2" },
+        "registrationJurisdictionProvinceOther": { "type": "string", "maxLength": 100 },
+        "address": {
+          "type": "object",
+          "properties": { "LvctrStructuredAddress": { "$ref": "#/definitions/structuredAddress" } },
+          "additionalProperties": false
+        },
+        "authorizedPersons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["@type"],
+            "properties": {
+              "@type": { "const": "LvctrPersonName" },
+              "surname": { "type": "string", "maxLength": 100 },
+              "givenName": { "type": "string", "maxLength": 100 },
+              "other": { "type": "string", "maxLength": 100 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "LvctrEntityIdentificationDetails": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/identification" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "subjectDefinition": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "LvctrPersonDetails": { "$ref": "#/definitions/personDetails" },
+        "LvctrEntityDetails": { "$ref": "#/definitions/entityDetails" }
+      },
+      "additionalProperties": false
+    },
+
+    "conductor": {
+      "type": "object",
+      "required": ["@type", "subject", "details"],
+      "properties": {
+        "@type": { "const": "LvctrConductor" },
+        "subject": { "$ref": "#/definitions/reference" },
+        "details": {
+          "type": "object",
+          "required": ["@type"],
+          "properties": {
+            "@type": { "const": "LvctrConductingDetails" },
+            "clientIndicator": { "type": "boolean" },
+            "clientNumber": { "type": "string", "maxLength": 50 },
+            "username": { "type": "string", "maxLength": 200 },
+            "email": { "type": "string", "maxLength": 200 },
+            "requestDateTime": { "$ref": "#/definitions/dateTime" },
+            "onBehalfOfIndicator": { "type": "boolean" },
+            "deviceTypeCode": { "type": "string", "enum": ["1", "2", "3", "4"] },
+            "deviceTypeOther": { "type": "string", "maxLength": 200 },
+            "deviceIdentificationNumber": { "type": "string", "maxLength": 200 },
+            "deviceIpAddress": { "type": "string", "maxLength": 200 }
+          },
+          "additionalProperties": false
+        },
+        "onBehalfOfs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["@type", "subject"],
+            "properties": {
+              "@type": { "const": "LvctrOnBehalfOf" },
+              "subject": { "$ref": "#/definitions/reference" },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "@type": { "const": "LvctrOnBehalfOfDetails" },
+                  "clientNumber": { "type": "string", "maxLength": 50 },
+                  "email": { "type": "string", "maxLength": 200 },
+                  "relationshipTypeCode": { "type": "string" },
+                  "relationshipTypeOther": { "type": "string", "maxLength": 200 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "namedInvolvement": {
+      "type": "object",
+      "required": ["@type", "name"],
+      "properties": {
+        "@type": {
+          "enum": ["LvctrSourceOfVirtualCurrency", "LvctrInvolvement", "LvctrAccountHolder"]
+        },
+        "name": { "$ref": "#/definitions/reference" },
+        "details": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+
+    "startingAction": {
+      "type": "object",
+      "required": ["@type", "details"],
+      "properties": {
+        "@type": { "const": "LvctrStartingAction" },
+        "details": {
+          "type": "object",
+          "required": ["@type", "virtualCurrencyTypeCode", "virtualCurrencyAmount", "canadianExchangeRate"],
+          "properties": {
+            "@type": { "const": "LvctrStartingActionDetails" },
+            "virtualCurrencyTypeCode": { "type": "string", "maxLength": 100 },
+            "virtualCurrencyTypeOther": { "type": "string", "maxLength": 200 },
+            "virtualCurrencyAmount": { "$ref": "#/definitions/amount" },
+            "canadianExchangeRate": { "$ref": "#/definitions/amount" },
+            "conductorIndicator": { "type": "boolean" },
+            "sourceOfVirtualCurrencyIndicator": { "type": "boolean" },
+            "sendingVirtualCurrencyAddresses": {
+              "type": "array",
+              "items": { "type": "string", "maxLength": 200 }
+            },
+            "obtained": { "type": "string", "maxLength": 200 }
+          },
+          "additionalProperties": false
+        },
+        "conductors": { "type": "array", "items": { "$ref": "#/definitions/conductor" } },
+        "sourcesOfVirtualCurrency": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/namedInvolvement" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "completingAction": {
+      "type": "object",
+      "required": ["@type", "details"],
+      "properties": {
+        "@type": { "const": "LvctrCompletingAction" },
+        "details": {
+          "type": "object",
+          "required": ["@type", "dispositionTypeCode", "canadianEquivalentAmount"],
+          "properties": {
+            "@type": { "const": "LvctrCompletingActionDetails" },
+            "dispositionTypeCode": { "type": "string" },
+            "dispositionTypeOther": { "type": "string", "maxLength": 200 },
+            "virtualCurrencyTypeCode": { "type": "string", "maxLength": 100 },
+            "virtualCurrencyTypeOther": { "type": "string", "maxLength": 200 },
+            "virtualCurrencyAmount": { "$ref": "#/definitions/amount" },
+            "canadianEquivalentAmount": { "$ref": "#/definitions/amount" },
+            "currencyTypeCode": { "$ref": "#/definitions/alpha3" },
+            "receivingVirtualCurrencyAddresses": {
+              "type": "array",
+              "items": { "type": "string", "maxLength": 200 }
+            },
+            "beneficiaryIndicator": { "type": "boolean" },
+            "involvementIndicator": { "type": "boolean" },
+            "accountNumber": { "type": "string", "maxLength": 50 },
+            "accountTypeCode": { "type": "string", "enum": ["1", "2", "3", "4", "5"] },
+            "accountTypeOther": { "type": "string", "maxLength": 200 },
+            "accountCurrencyTypeCode": { "$ref": "#/definitions/alpha3" },
+            "accountVirtualCurrencyTypeCode": { "type": "string", "maxLength": 100 },
+            "accountVirtualCurrencyTypeOther": { "type": "string", "maxLength": 200 },
+            "accountOpenDate": { "$ref": "#/definitions/localDate" },
+            "branchNumber": { "type": "string", "maxLength": 50 },
+            "financialInstitutionNumber": { "type": "string", "maxLength": 50 },
+            "referenceNumber": { "type": "string", "maxLength": 200 },
+            "otherRelatedNumber": { "type": "string", "maxLength": 200 }
+          },
+          "additionalProperties": false
+        },
+        "beneficiaries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["@type", "subject"],
+            "properties": {
+              "@type": { "const": "LvctrBeneficiary" },
+              "subject": { "$ref": "#/definitions/reference" },
+              "details": { "type": "object" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "involvements": { "type": "array", "items": { "$ref": "#/definitions/namedInvolvement" } },
+        "accountHolders": { "type": "array", "items": { "$ref": "#/definitions/namedInvolvement" } }
+      },
+      "additionalProperties": false
+    },
+
+    "transaction": {
+      "type": "object",
+      "required": ["@type", "details", "startingActions", "completingActions"],
+      "properties": {
+        "@type": { "const": "LvctrTransaction" },
+        "details": {
+          "type": "object",
+          "required": ["@type", "transactionReference", "transactionDateTime", "locationReference"],
+          "properties": {
+            "@type": { "const": "LvctrTransactionDetails" },
+            "transactionReference": { "type": "string", "maxLength": 20 },
+            "transactionDateTime": { "$ref": "#/definitions/dateTime" },
+            "locationReference": { "type": "string", "maxLength": 20 },
+            "transactionMethodTypeCode": { "type": "string", "enum": ["1", "7", "8", "9"] },
+            "transactionMethodTypeOther": { "type": "string", "maxLength": 200 },
+            "transactionPurpose": { "type": "string", "maxLength": 200 },
+            "thresholdIndicator": { "type": "boolean" },
+            "transactionIdentifiers": {
+              "type": "array",
+              "items": { "type": "string", "maxLength": 200 }
+            }
+          },
+          "additionalProperties": false
+        },
+        "startingActions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/startingAction" }
+        },
+        "completingActions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/completingAction" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,24 @@
+# Keep the serverless bundle small and free of local state.
+# Vercel's function limit is 250MB unzipped and the ML stack already uses most
+# of it, so nothing that isn't needed to serve a request should ship.
+
+tests/
+docs/
+data/
+*.db
+*.db-wal
+*.db-shm
+
+.claude/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+requirements-dev.txt
+run.py
+pytest.ini
+
+# The synthetic generator and seeder run from a developer machine against the
+# remote database, never inside a request - a full seed takes minutes and would
+# blow past any function timeout. See docs/DEPLOY_VERCEL.md.
+scripts/

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FINTRAC Sentinel</title>
+  <meta name="description" content="Explainable AML monitoring and regulatory reporting for virtual-currency transactions.">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>&#128737;</text></svg>">
+</head>
+<body>
+  <div id="synthetic-banner" class="banner" role="status">
+    <strong>SYNTHETIC DATA</strong>
+    <span>Every customer, wallet and transaction here is fabricated. Reports are filed to a local mock receiver, never to FINTRAC.</span>
+  </div>
+
+  <div id="app" aria-live="polite"></div>
+
+  <div id="toast-stack" class="toast-stack" aria-live="assertive"></div>
+
+  <script type="module" src="/static/js/app.js"></script>
+  <noscript>
+    <p style="padding:2rem">FINTRAC Sentinel needs JavaScript. The API remains available at <code>/docs</code>.</p>
+  </noscript>
+</body>
+</html>
