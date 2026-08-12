@@ -252,6 +252,35 @@ current technical documentation before filing anything.**
 
 ## License
 
-The reference repository `8KSS/FINTRAC-LVCTR` is separately licensed; consult it
-directly. This project is an independent implementation that used it as a field
-mapping reference.
+This project is released under the **MIT License** — see [LICENSE](LICENSE).
+
+### Relationship to `8KSS/FINTRAC-LVCTR`
+
+The reference repository [`8KSS/FINTRAC-LVCTR`](https://github.com/8KSS/FINTRAC-LVCTR)
+is licensed **GPL v2**, so it is worth being precise about what was and was not
+taken from it.
+
+**Not taken:** any source code. That project is a single self-contained HTML
+page with inline JavaScript; this one is a Python/FastAPI application with a
+separate front end. No file, function or block was copied or translated.
+
+**Taken:** the *shape of FINTRAC's report format* — field names, object
+nesting, `$id`/`$ref` conventions, code-list values and the field length and
+type constraints. These originate in FINTRAC's own technical specification for
+the LVCTR upload format; the reference repository is where they were
+conveniently transcribed, and it is credited for that throughout
+[docs/LEGACY_REPO_ANALYSIS.md](docs/LEGACY_REPO_ANALYSIS.md) and
+[docs/FINTRAC_MAPPING.md](docs/FINTRAC_MAPPING.md). Everything derived from it
+is confined to `app/services/fintrac_mapper.py` and
+`app/schemas_json/lvctr.schema.json`.
+
+A data-interchange format is an interface specification, not an expressive
+work, and reimplementing one independently is not generally held to create a
+derivative work. That is the basis for licensing this project under MIT rather
+than GPL v2. It is a considered position, not legal advice — anyone
+redistributing this, or building on it commercially, should form their own
+view.
+
+The reference repository deserves the credit either way: it is the artefact
+that made the 2021 LVCTR format legible to people outside the reporting
+entities that already had it working.
