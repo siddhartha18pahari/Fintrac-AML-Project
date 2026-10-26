@@ -36,6 +36,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..models import AggregationEvent, AggregationType, Direction, Transaction
 from ..util import add_working_days, cad, utcnow
+from .instruments import is_virtual_currency
 
 #: Whether a receipt landing exactly on ``t - 24h`` counts as inside the window.
 WINDOW_START_INCLUSIVE = True
@@ -122,6 +123,9 @@ def window_for(
         .scalars()
         .all()
     )
+    # Cash and EFT have their own thresholds. Counting them here would turn a
+    # bank deposit into a Large Virtual Currency Transaction Report.
+    rows = [row for row in rows if is_virtual_currency(row)]
     total = cad(sum((Decimal(str(t.cad_value)) for t in rows), Decimal("0")))
     return WindowResult(group=group, transactions=rows, total_cad=total, window_start=start, window_end=end)
 
@@ -158,7 +162,7 @@ def evaluate_transaction(session: Session, txn: Transaction) -> list[Aggregation
     Only incoming receipts create an LVCTR obligation; outgoing dispositions are
     still monitored by the rules engine but are not aggregated here.
     """
-    if txn.direction is not Direction.INCOMING:
+    if txn.direction is not Direction.INCOMING or not is_virtual_currency(txn):
         return []
 
     touched: list[AggregationEvent] = []

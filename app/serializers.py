@@ -94,6 +94,7 @@ def transaction_json(txn: Transaction, *, customer: Customer | None = None) -> d
         "price_quote_id": txn.price_quote_id,
         "occurred_at": iso(txn.occurred_at),
         "direction": txn.direction.value,
+        "instrument": txn.instrument.value if txn.instrument is not None else "VIRTUAL_CURRENCY",
         "blockchain": txn.blockchain,
         "tx_hash": txn.tx_hash,
         "beneficiary_id": txn.beneficiary_id,

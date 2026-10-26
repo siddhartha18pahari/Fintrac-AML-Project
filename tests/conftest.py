@@ -148,6 +148,11 @@ def receipt(
     sender_risk: int | None = None,
     sender_tags: list[str] | None = None,
     sender_first_seen: datetime | None = None,
+    instrument: str = "VIRTUAL_CURRENCY",
+    international: bool | None = None,
+    counterparty_country: str | None = None,
+    counterparty_institution: str | None = None,
+    device_id: str | None = None,
 ):
     """Ingest one transaction with an exact CAD value.
 
@@ -157,6 +162,8 @@ def receipt(
     """
     _counter["n"] += 1
     amount = Decimal(str(cad))
+    if instrument != "VIRTUAL_CURRENCY" and asset == "USDT":
+        asset = "CAD"
     payload = {
         "transaction_id": f"tx_test_{_counter['n']:05d}",
         "customer_id": customer.external_id,
@@ -168,9 +175,20 @@ def receipt(
         "direction": direction,
         "wallet_from": sender or (f"ext_{_counter['n']:05d}" if direction == "incoming" else "int_wallet_1"),
         "wallet_to": "int_wallet_1" if direction == "incoming" else f"ext_out_{_counter['n']:05d}",
-        "blockchain": asset,
+        "blockchain": "FIAT" if instrument != "VIRTUAL_CURRENCY" else asset,
         "blockchain_tx_hash": f"hash{_counter['n']:060d}",
+        "instrument": instrument,
     }
+    if international is not None:
+        payload["international"] = international
+    if counterparty_country:
+        payload["counterparty_country"] = counterparty_country
+    if counterparty_institution:
+        payload["counterparty_institution"] = counterparty_institution
+    if device_id:
+        payload.setdefault("context", {})
+        # context is applied below; stash on the payload for the pipeline.
+        payload["context"] = {"device_id": device_id}
     if beneficiary is not None:
         payload["beneficiary_id"] = beneficiary.external_id
         payload["beneficiary_name"] = beneficiary.name

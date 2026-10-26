@@ -246,6 +246,50 @@ def run_pipeline(
     return summary
 
 
+@router.get("/customer-risk")
+def list_customer_risk(session: SessionDep, _: UserDep) -> dict:
+    from ..models import Customer
+    from ..services import customer_risk
+
+    ratings = customer_risk.assess_all(session)
+    customers = {row.id: row for row in session.execute(select(Customer)).scalars().all()}
+    payload = []
+    for rating in ratings:
+        item = rating.as_dict()
+        customer = customers.get(rating.customer_id)
+        item["name"] = customer.name if customer else None
+        item["reference"] = customer.external_id if customer else None
+        item["kyc_risk"] = customer.kyc_risk if customer else None
+        payload.append(item)
+    payload.sort(key=lambda item: (-item["residual"], item["name"] or ""))
+    return {"customers": payload}
+
+
+@router.get("/customer-risk/{customer_id}")
+def get_customer_risk(customer_id: int, session: SessionDep, _: UserDep) -> dict:
+    from ..models import Customer
+    from ..services import customer_risk
+
+    customer = session.get(Customer, customer_id)
+    if customer is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "customer not found")
+    rating = customer_risk.assess_customer(session, customer)
+    payload = rating.as_dict()
+    payload["name"] = customer.name
+    payload["reference"] = customer.external_id
+    payload["kyc_risk"] = customer.kyc_risk
+    payload["country"] = customer.country
+    payload["occupation_or_business"] = customer.occupation_or_business
+    return payload
+
+
+@router.get("/links")
+def list_links(session: SessionDep, _: UserDep) -> dict:
+    from ..services import link_analysis
+
+    return link_analysis.analyze(session)
+
+
 @router.post("/anomaly/run")
 def run_anomaly(session: SessionDep, actor: User = Depends(require("pipeline:run"))) -> dict:
     results = anomaly.run(session)

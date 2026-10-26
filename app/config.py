@@ -74,7 +74,7 @@ class ReportingEntityProfile:
 @dataclass(frozen=True)
 class Settings:
     app_name: str = "FINTRAC Sentinel"
-    version: str = "1.0.0"
+    version: str = "1.1.0"
 
     # ---- persistence -----------------------------------------------------
     # SQLite by default so the project runs with zero infrastructure.
@@ -89,6 +89,10 @@ class Settings:
     # ---- regulatory parameters ------------------------------------------
     # LVCTR threshold: CAD 10,000 or more received in virtual currency.
     lvctr_threshold_cad: Decimal = Decimal(_env("LVCTR_THRESHOLD_CAD", "10000"))
+    # LCTR threshold: CAD 10,000 or more in cash received.
+    lctr_threshold_cad: Decimal = Decimal(_env("LCTR_THRESHOLD_CAD", "10000"))
+    # EFTR threshold: CAD 10,000 or more in an international electronic funds transfer.
+    eftr_threshold_cad: Decimal = Decimal(_env("EFTR_THRESHOLD_CAD", "10000"))
     # The 24-hour rule window.
     aggregation_window_hours: int = int(_env("AGGREGATION_WINDOW_HOURS", "24"))
     # LVCTR must generally be filed within 5 working days of the day of receipt.
@@ -183,6 +187,17 @@ class Settings:
             if low <= score <= high:
                 return name
         return "CRITICAL"
+
+
+#: Rules that record a reporting obligation. They are not, by themselves,
+#: indicators that an STR should be filed. Kept here so the case service and
+#: the STR copilot agree on the boundary.
+REPORTING_RULE_IDS = frozenset({"AML-VC-012", "AML-FI-001", "AML-FI-002"})
+
+#: Illustrative country-risk list for customer inherent-risk scoring. The rule
+#: catalogue carries its own copy (AML-VC-009); both are placeholders for a
+#: board-approved assessment and must not be treated as a sanctions list.
+HIGH_RISK_JURISDICTIONS = frozenset({"KP", "IR", "MM", "SY", "AF"})
 
 
 settings = Settings()

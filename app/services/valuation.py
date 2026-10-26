@@ -39,10 +39,17 @@ ANCHOR_PRICES_CAD: dict[str, Decimal] = {
     "XMR": Decimal("236.00"),
     "SOL": Decimal("205.00"),
     "DOGE": Decimal("0.21"),
+    # Fiat anchors. CAD is exactly par; the others are plausible offline
+    # reference rates for valuing a foreign-currency EFT into the reporting
+    # currency. They are not a live FX feed.
+    "CAD": Decimal("1.00"),
+    "USD": Decimal("1.36"),
+    "EUR": Decimal("1.48"),
+    "GBP": Decimal("1.72"),
 }
 
 #: Relative daily volatility used by the synthetic walk.
-VOLATILITY: dict[str, float] = {"USDT": 0.001, "USDC": 0.001}
+VOLATILITY: dict[str, float] = {"USDT": 0.001, "USDC": 0.001, "CAD": 0.0}
 DEFAULT_VOLATILITY = 0.035
 
 SOURCE_NAME = "sentinel_offline_reference_feed"

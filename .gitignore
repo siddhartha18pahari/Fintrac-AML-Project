@@ -1,6 +1,10 @@
 # Never commit data or secrets. This file is a convenience, not a control -
 # see docs/SECURITY.md.
 data/
+# The investigator workspace ships one synthetic detection snapshot so Vercel
+# can build without a database. Everything else under data/ stays ignored.
+!web/src/data/
+!web/src/data/snapshot.json
 *.db
 *.db-wal
 *.db-shm
@@ -21,3 +25,5 @@ Thumbs.db
 .vscode/
 .claude/
 .vercel/
+web/node_modules/
+web/.next/

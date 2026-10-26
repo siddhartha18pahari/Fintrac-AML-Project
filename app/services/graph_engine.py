@@ -135,15 +135,38 @@ def build_graph(
             "direction": txn.direction.value,
             "tx_hash": txn.tx_hash,
         }
-        if txn.direction is Direction.INCOMING:
-            src = ensure_wallet(txn.wallet_from) if txn.wallet_from else ensure_party(txn.customer_id)
+        instrument = txn.instrument.value if getattr(txn, "instrument", None) is not None else "VIRTUAL_CURRENCY"
+        attrs["instrument"] = instrument
+
+        def ensure_rail() -> str:
+            country = str((txn.context or {}).get("counterparty_country") or "CA")
+            node = f"rail:{instrument}:{country}"
+            if node not in graph:
+                graph.add_node(
+                    node,
+                    kind="rail",
+                    label=f"{instrument.replace('_', ' ').title()} · {country}",
+                    instrument=instrument,
+                    country=country,
+                )
+            return node
+
+        fiat_without_wallets = instrument != "VIRTUAL_CURRENCY" and not txn.wallet_from and not txn.wallet_to
+        if fiat_without_wallets:
+            rail = ensure_rail()
+            if txn.direction is Direction.INCOMING:
+                graph.add_edge(rail, cust, key=f"txn:{txn.id}", relation="SENT", **attrs)
+            else:
+                graph.add_edge(cust, rail, key=f"txn:{txn.id}", relation="SENT", **attrs)
+        elif txn.direction is Direction.INCOMING:
+            src = ensure_wallet(txn.wallet_from) if txn.wallet_from else ensure_rail()
             dst = ensure_wallet(txn.wallet_to) if txn.wallet_to else cust
             graph.add_edge(src, dst, key=f"txn:{txn.id}", relation="SENT", **attrs)
             if txn.wallet_to:
                 graph.add_edge(cust, dst, key=f"owns:{txn.id}", relation="CONTROLS", kind="ownership")
         else:
             src = ensure_wallet(txn.wallet_from) if txn.wallet_from else cust
-            dst = ensure_wallet(txn.wallet_to) if txn.wallet_to else ensure_party(txn.customer_id)
+            dst = ensure_wallet(txn.wallet_to) if txn.wallet_to else ensure_rail()
             graph.add_edge(src, dst, key=f"txn:{txn.id}", relation="SENT", **attrs)
             if txn.wallet_from:
                 graph.add_edge(cust, src, key=f"owns:{txn.id}", relation="CONTROLS", kind="ownership")

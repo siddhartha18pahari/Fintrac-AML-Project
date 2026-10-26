@@ -105,6 +105,25 @@ failure.
 
 ---
 
+## Cash, wires, and movement between rails
+
+These customers are created in addition to the retail book. None of them is an
+LVCTR: cash and electronic transfers are not virtual-currency receipts.
+
+| Scenario | What is planted | What should fire |
+|---|---|---|
+| `lctr_single` | Helene Bouchard, one cash receipt of CAD 12,500 | `AML-FI-001`. No aggregation event. |
+| `cash_structuring` | Harbour Cash Services Ltd., four cash receipts of CAD 9,200 / 8,800 / 9,500 / 8,700 in one day | `AML-FI-001` (the 24-hour total) and `AML-FI-003` (each piece stayed under the line). |
+| `eftr_international` | Owen Lindqvist, CAD 18,500 outgoing wire to a German bank | `AML-FI-002`. A domestic wire of the same size does not fire. |
+| `rapid_cross_rail` | Cedar Remit Co., CAD 18,000 cash in, then USDT out within two hours | `AML-FI-001` and `AML-FI-004`. The virtual-currency pass-through rule does not treat the cash as VC. |
+| `smurf_ring` | Three customers, CAD 4,500 cash each, one beneficiary, one shared device | `AML-FI-005` on the third conductor. No single customer reaches the large-cash line. Link analysis clusters them. |
+
+The workspace snapshot (`python -m scripts.export_snapshot`) includes these
+scenarios. Harbour Cash Services and Maple Digital Imports are the two cases
+the overview page points at.
+
+---
+
 ## Things to try in the console
 
 **Validation lab** (`#/validation`). The pre-loaded payload is deliberately
