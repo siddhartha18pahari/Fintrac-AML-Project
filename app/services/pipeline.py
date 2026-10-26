@@ -24,6 +24,7 @@ from ..models import (
     Customer,
     CustomerType,
     Direction,
+    Instrument,
     Party,
     PartyKind,
     Transaction,
@@ -35,6 +36,27 @@ from . import aggregation, anomaly, case_service, risk, rules_engine, valuation
 
 class IngestionError(Exception):
     pass
+
+
+_INSTRUMENT_ALIASES = {
+    "VC": Instrument.VIRTUAL_CURRENCY,
+    "CRYPTO": Instrument.VIRTUAL_CURRENCY,
+    "VIRTUAL_CURRENCY": Instrument.VIRTUAL_CURRENCY,
+    "CASH": Instrument.CASH,
+    "EFT": Instrument.EFT,
+    "WIRE": Instrument.EFT,
+    "ELECTRONIC": Instrument.EFT,
+}
+
+
+def _instrument(value) -> Instrument:
+    if value is None or value == "":
+        return Instrument.VIRTUAL_CURRENCY
+    key = str(value).upper().replace("-", "_").replace(" ", "_")
+    try:
+        return _INSTRUMENT_ALIASES[key]
+    except KeyError as exc:
+        raise IngestionError(f"unknown instrument {value!r}") from exc
 
 
 @dataclass
@@ -169,9 +191,10 @@ def ingest_transaction(session: Session, payload: dict) -> IngestResult:
 
     occurred_at = parse_dt(payload["timestamp"])
     direction = Direction(str(payload.get("direction", "incoming")).upper())
+    instrument = _instrument(payload.get("instrument"))
     asset = str(payload["asset"]).upper()
     asset_amount = Decimal(str(payload["asset_amount"]))
-    blockchain = str(payload.get("blockchain") or asset)
+    blockchain = str(payload.get("blockchain") or ("FIAT" if instrument is not Instrument.VIRTUAL_CURRENCY else asset))
 
     val, quote = valuation.value_amount(
         session,
@@ -186,6 +209,13 @@ def ingest_transaction(session: Session, payload: dict) -> IngestResult:
     # silently accepted, because it changes threshold outcomes.
     supplied_cad = payload.get("cad_value")
     context = dict(payload.get("context") or {})
+    context["instrument"] = instrument.value
+    if payload.get("international") is not None:
+        context["international"] = bool(payload["international"])
+    if payload.get("counterparty_country"):
+        context["counterparty_country"] = str(payload["counterparty_country"]).upper()
+    if payload.get("counterparty_institution"):
+        context["counterparty_institution"] = str(payload["counterparty_institution"])
     if supplied_cad is not None and cad(supplied_cad) != val.cad_value:
         context["cad_value_discrepancy"] = {
             "supplied": float(cad(supplied_cad)),
@@ -251,6 +281,7 @@ def ingest_transaction(session: Session, payload: dict) -> IngestResult:
         valuation_methodology=val.methodology_version,
         occurred_at=occurred_at,
         direction=direction,
+        instrument=instrument,
         blockchain=blockchain,
         tx_hash=payload.get("blockchain_tx_hash") or payload.get("tx_hash"),
         beneficiary_id=beneficiary.id if beneficiary else None,
@@ -312,7 +343,8 @@ def process_transaction(
     # clears the triage threshold.  Lower-scoring alerts stay in the alert queue
     # for an analyst to triage rather than manufacturing a case per indicator.
     reportable = [e for e in events if e.threshold_met]
-    if reportable or assessment.score >= settings.case_creation_score:
+    reporting_alert = any(alert.severity == "reporting" for alert in alerts)
+    if reportable or reporting_alert or assessment.score >= settings.case_creation_score:
         customer = session.get(Customer, txn.customer_id)
         case, created = case_service.open_case_for(
             session, customer, alerts, assessment, aggregation_events=events

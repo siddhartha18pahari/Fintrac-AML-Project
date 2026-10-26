@@ -55,9 +55,24 @@ in February is reproducible with February's parameters.
 | **AML-VC-008** | Beneficiary shared across unrelated customers | third party | medium | 14 | ≥2 customers direct value to one beneficiary within 7 days |
 | **AML-VC-014** | Receipts concentrated in newly observed addresses | obfuscation | low | 10 | ≥50% of 24h value from addresses first seen within 7 days |
 | **AML-VC-009** | Counterparty exposure to a higher-risk jurisdiction | geography | medium | 12 | a party or login geography is on the configured list |
+| **AML-FI-001** | Large cash receipts reached the reporting threshold | threshold | reporting | 25 | cash received for one conductor, single or 24-hour total, ≥ CAD 10,000 |
+| **AML-FI-002** | International EFTs reached the reporting threshold | threshold | reporting | 25 | international EFT in one direction, single or 24-hour total, ≥ CAD 10,000 |
+| **AML-FI-003** | Cash receipts structured below the large-cash line | structuring | high | 22 | ≥3 cash receipts each in [CAD 2,000, 10,000) totalling ≥ CAD 10,000 within 48 hours |
+| **AML-FI-004** | Rapid movement of funds from one rail to another | velocity | high | 20 | ≥70% of value received on one rail leaves on another within 6 hours, inflow ≥ CAD 5,000 |
+| **AML-FI-005** | Several customers place sub-threshold cash with one beneficiary | structuring | high | 20 | ≥3 customers, each cash receipt under CAD 10,000, combined ≥ CAD 10,000 within 24 hours |
 
 Superseded versions retained for reproducibility: `AML-VC-001 v1.0`,
 `AML-VC-004 v1.0`.
+
+`AML-FI-001` and `AML-FI-002` are reporting observations, in the same sense as
+`AML-VC-012`. They are excluded from the STR copilot's suspicion section and
+they do not, by themselves, set `str_candidate`. They do open a case, because
+a reporting duty is work even when nobody is suspicious. Cash and wires never
+enter the LVCTR aggregation.
+
+`AML-VC-003` (virtual-currency pass-through) measures the virtual-currency rail
+only. Cash that leaves as virtual currency is `AML-FI-004`, not a second copy
+of the VC rule.
 
 ---
 

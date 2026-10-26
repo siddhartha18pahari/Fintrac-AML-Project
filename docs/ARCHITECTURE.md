@@ -46,6 +46,24 @@ Every stage is a module in `app/services/`, independently importable and
 independently tested. `pipeline.py` wires them together and owns the
 transactional boundaries; nothing else does.
 
+Cash and electronic funds transfers enter through the same ingestion path,
+tagged with `Transaction.instrument`. The 24-hour LVCTR aggregation ignores
+anything that is not virtual currency. Large cash (LCTR), international wires
+(EFTR), sub-threshold structuring and cross-rail movement are separate
+evaluators in `fiat_rules.py`. A reporting-threshold rule opens a case and is
+withheld from the STR narrative's "why suspicious" section: the obligation and
+the suspicion stay different sentences.
+
+Customer residual risk (`customer_risk.py`) is a second score, beside the alert
+composite. It names onboarding factors (KYC rating, jurisdiction, declared
+activity, cash intensity) and then adds the open-alert score. Link analysis
+(`link_analysis.py`) clusters customers that share an external wallet, a device,
+an IP address or a beneficiary. Neither module files a report.
+
+The Next.js workspace in `web/` does not reimplement those stages. `scripts/export_snapshot.py`
+runs them and writes `web/src/data/snapshot.json`, which the workspace and its
+API routes read. Regenerating the file is how a rule change reaches the UI.
+
 ---
 
 ## Key decisions

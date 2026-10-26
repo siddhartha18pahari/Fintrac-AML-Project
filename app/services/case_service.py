@@ -215,8 +215,13 @@ def open_case_for(
         case.due_at = min(case.due_at, earliest) if case.due_at else earliest
 
     # An STR *candidate* flag means "a human must consider whether suspicion
-    # exists", never "an STR will be filed".
-    suspicion_drivers = [d for d in assessment.drivers if d.source == "rule" and d.key != "AML-VC-012"]
+    # exists", never "an STR will be filed". Reporting-threshold rules
+    # (LVCTR, LCTR, EFTR) are obligations, not suspicion.
+    from ..config import REPORTING_RULE_IDS
+
+    suspicion_drivers = [
+        d for d in assessment.drivers if d.source == "rule" and d.key not in REPORTING_RULE_IDS
+    ]
     if assessment.score >= settings.case_creation_score and suspicion_drivers:
         case.str_candidate = True
 
@@ -473,6 +478,7 @@ def case_timeline(session: Session, case: Case) -> list[dict]:
             "external_id": t.external_id,
             "occurred_at": iso(t.occurred_at),
             "direction": t.direction.value,
+            "instrument": t.instrument.value if t.instrument is not None else "VIRTUAL_CURRENCY",
             "asset": t.asset,
             "asset_amount": token_amount(t.asset_amount),
             "cad_value": float(cad(Decimal(str(t.cad_value)))),

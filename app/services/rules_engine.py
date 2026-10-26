@@ -552,11 +552,17 @@ def _pass_through(ctx: RuleContext, rule: Rule) -> list[Finding]:
     min_ratio = float(rule.inputs.get("min_outflow_ratio", 0.8))
     min_cad = cad(rule.inputs.get("min_cad", 0))
 
-    inflow = ctx.window(hours=minutes / 60, direction=Direction.INCOMING)
+    # Virtual-currency conduit only. Cash that leaves as virtual currency is
+    # AML-FI-004 (rapid movement across rails), not this rule.
+    from .instruments import is_virtual_currency
+
+    inflow = [row for row in ctx.window(hours=minutes / 60, direction=Direction.INCOMING) if is_virtual_currency(row)]
     received = total_cad(inflow)
     if received < min_cad:
         return []
-    outflow = ctx.after(minutes=minutes, direction=Direction.OUTGOING)
+    outflow = [
+        row for row in ctx.after(minutes=minutes, direction=Direction.OUTGOING) if is_virtual_currency(row)
+    ]
     if not outflow:
         return []
 
@@ -896,6 +902,11 @@ def evaluate(
             finding.occurred_at = finding.occurred_at or txn.occurred_at
             findings.append(finding)
     return findings
+
+
+# Importing registers the cash and EFT evaluators. Done last so the decorator
+# and Finding types already exist; the import is for its side effect.
+from . import fiat_rules as _fiat_rules  # noqa: E402,F401
 
 
 def catalogue_summary() -> list[dict]:

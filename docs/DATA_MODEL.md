@@ -54,7 +54,7 @@ an amount reaches a narrative or a payload.
 | Table | Purpose |
 |---|---|
 | `price_quotes` | immutable rate snapshot: asset, `price_cad`, `source`, `quoted_at`, `methodology_version` |
-| `transactions` | the canonical ledger; `external_id` unique so replaying a feed cannot double every aggregate; `price_quote_id` points at the rate actually used; `synthetic_scenario` is populated only by the generator |
+| `transactions` | the canonical ledger; `external_id` unique so replaying a feed cannot double every aggregate; `price_quote_id` points at the rate actually used; `instrument` is `VIRTUAL_CURRENCY` (the default), `CASH` or `EFT`; `synthetic_scenario` is populated only by the generator |
 
 `transactions.context` carries ingestion metadata the report builder needs
 (device type, IP, username, purpose, disposition code) without adding a column

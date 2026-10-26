@@ -50,13 +50,17 @@ def test_health_declares_whether_the_model_layer_is_present(client):
 
 
 class _BlockSklearn:
-    """Simulates a slim build with scikit-learn dropped from requirements."""
+    """Simulates a slim build with scikit-learn dropped from requirements.
 
-    def find_module(self, name, path=None):
-        return self if name == "sklearn" or name.startswith("sklearn.") else None
+    ``find_spec`` is what Python 3.12 consults. Raising here is the import
+    system's signal that the module is absent, which is what a deployment
+    without the optional dependency actually looks like.
+    """
 
-    def load_module(self, name):
-        raise ImportError(f"No module named {name!r} (simulated slim build)")
+    def find_spec(self, name, path, target=None):
+        if name == "sklearn" or name.startswith("sklearn."):
+            raise ImportError(f"No module named {name!r} (simulated slim build)")
+        return None
 
 
 @pytest.fixture()

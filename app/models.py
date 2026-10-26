@@ -98,6 +98,19 @@ class Direction(str, enum.Enum):
     OUTGOING = "OUTGOING"
 
 
+class Instrument(str, enum.Enum):
+    """How the value moved. Virtual currency is the historical default.
+
+    Cash and electronic funds transfers are first-class so Large Cash
+    Transaction Reports and Electronic Funds Transfer Reports can be detected
+    without pretending a banknote is a blockchain receipt.
+    """
+
+    VIRTUAL_CURRENCY = "VIRTUAL_CURRENCY"
+    CASH = "CASH"
+    EFT = "EFT"
+
+
 class PartyKind(str, enum.Enum):
     BENEFICIARY = "BENEFICIARY"
     THIRD_PARTY = "THIRD_PARTY"
@@ -280,6 +293,11 @@ class Transaction(Base):
 
     occurred_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     direction: Mapped[Direction] = mapped_column(Enum(Direction), index=True)
+    # Missing on rows written before fiat rails existed is treated as virtual
+    # currency by ``app.services.instruments.instrument_of``.
+    instrument: Mapped[Instrument] = mapped_column(
+        Enum(Instrument), default=Instrument.VIRTUAL_CURRENCY, index=True
+    )
     blockchain: Mapped[str] = mapped_column(String(24), default="BTC")
     tx_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
 

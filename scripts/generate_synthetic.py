@@ -256,6 +256,66 @@ class SyntheticGenerator:
         self.transactions.append(payload)
         return payload
 
+    def _fiat(
+        self,
+        customer: dict,
+        *,
+        at: datetime,
+        cad_value: Decimal | float | int,
+        instrument: str,
+        direction: str = "incoming",
+        scenario: str,
+        beneficiary: dict | None = None,
+        international: bool = False,
+        counterparty_country: str = "CA",
+        counterparty_institution: str | None = None,
+        device_id: str | None = None,
+    ) -> dict:
+        """Cash or electronic-funds movement. CAD is the asset; the rate is par."""
+        amount = Decimal(str(cad_value)).quantize(Decimal("0.01"))
+        txn_id = self._next_txn_id()
+        self._txn_seq += 1
+        purpose = "Cash deposit" if instrument == "CASH" else "Electronic funds transfer"
+        payload = {
+            "transaction_id": txn_id,
+            "customer_id": customer["customer_id"],
+            "instrument": instrument,
+            "asset": "CAD",
+            "asset_amount": str(amount),
+            "exchange_rate": "1",
+            "cad_value": str(amount),
+            "timestamp": at.isoformat(),
+            "direction": direction,
+            "blockchain": "FIAT",
+            "scenario": scenario,
+            "international": international,
+            "counterparty_country": counterparty_country,
+            "context": {
+                "ip_address": self._ip(customer),
+                "ip_country": counterparty_country if international else customer["country"],
+                "device_type_code": "1",
+                "device_id": device_id or f"dev-{customer['customer_id']}",
+                "username": customer["username"],
+                "method_code": "1" if instrument == "CASH" else "2",
+                "purpose": purpose,
+                "international": international,
+                "counterparty_country": counterparty_country,
+            },
+        }
+        if counterparty_institution:
+            payload["counterparty_institution"] = counterparty_institution
+            payload["context"]["counterparty_institution"] = counterparty_institution
+        if beneficiary:
+            payload.update(
+                {
+                    "beneficiary_id": beneficiary["party_id"],
+                    "beneficiary_name": beneficiary["name"],
+                    "beneficiary_country": beneficiary["country"],
+                }
+            )
+        self.transactions.append(payload)
+        return payload
+
     def _ip(self, customer: dict) -> str:
         base = abs(hash(customer["customer_id"])) % 254 + 1
         return f"198.51.{base}.{self.rng.randint(2, 250)}"
@@ -737,6 +797,144 @@ class SyntheticGenerator:
             )
         )
 
+    # -- cash, wires, and cross-rail movement ----------------------------
+
+    def _scenario_lctr_single(self, at: datetime) -> None:
+        customer = self._make_customer(9101, name="Helene Bouchard")
+        customer["expected_monthly_volume_cad"] = "8000"
+        customer["occupation_or_business"] = "Retail manager"
+        self._fiat(
+            customer,
+            at=at.replace(hour=11, minute=15),
+            cad_value=Decimal("12500"),
+            instrument="CASH",
+            scenario="lctr_single",
+        )
+        self.expectations.append(
+            Expectation(
+                "lctr_single",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-FI-001"],
+                note="One cash receipt of CAD 12,500. Large cash transaction report, not an LVCTR.",
+            )
+        )
+
+    def _scenario_cash_structuring(self, at: datetime) -> None:
+        customer = self._make_customer(9102, entity=True, name="Harbour Cash Services Ltd.")
+        customer["kyc_risk"] = "HIGH"
+        customer["occupation_or_business"] = "Money services and remittance"
+        customer["expected_monthly_volume_cad"] = "20000"
+        base = at.replace(hour=9, minute=5)
+        for index, amount in enumerate((Decimal("9200"), Decimal("8800"), Decimal("9500"), Decimal("8700"))):
+            self._fiat(
+                customer,
+                at=base + timedelta(hours=3 * index),
+                cad_value=amount,
+                instrument="CASH",
+                scenario="cash_structuring",
+            )
+        self.expectations.append(
+            Expectation(
+                "cash_structuring",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-FI-001", "AML-FI-003"],
+                note="Four cash receipts under CAD 10,000 that together clear the line inside one day.",
+            )
+        )
+
+    def _scenario_eftr(self, at: datetime) -> None:
+        customer = self._make_customer(9103, name="Owen Lindqvist")
+        customer["expected_monthly_volume_cad"] = "6000"
+        self._fiat(
+            customer,
+            at=at.replace(hour=14, minute=40),
+            cad_value=Decimal("18500"),
+            instrument="EFT",
+            direction="outgoing",
+            scenario="eftr_international",
+            international=True,
+            counterparty_country="DE",
+            counterparty_institution="Nordhalle Bank AG",
+        )
+        self.expectations.append(
+            Expectation(
+                "eftr_international",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-FI-002"],
+                note="CAD 18,500 international wire to Germany. EFTR threshold, not a domestic transfer.",
+            )
+        )
+
+    def _scenario_rapid_rails(self, at: datetime) -> None:
+        customer = self._make_customer(9104, entity=True, name="Cedar Remit Co.")
+        customer["occupation_or_business"] = "Money services and remittance"
+        customer["kyc_risk"] = "HIGH"
+        customer["expected_monthly_volume_cad"] = "15000"
+        start = at.replace(hour=10, minute=5)
+        self._fiat(
+            customer,
+            at=start,
+            cad_value=Decimal("18000"),
+            instrument="CASH",
+            scenario="rapid_cross_rail",
+        )
+        self._disposition(
+            customer,
+            at=start + timedelta(hours=2),
+            cad_value=Decimal("15500"),
+            asset="USDT",
+            scenario="rapid_cross_rail",
+        )
+        self.expectations.append(
+            Expectation(
+                "rapid_cross_rail",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-FI-001", "AML-FI-004"],
+                note="CAD 18,000 in cash leaves as USDT within two hours.",
+            )
+        )
+
+    def _scenario_smurf_ring(self, at: datetime) -> None:
+        beneficiary = self._make_party(910, "BENEFICIARY", entity=True, country="CA")
+        device = "dev-smurf-ring"
+        names = ("Ibrahim Haddad", "Nora Silva", "Etienne Moreau")
+        planted = []
+        base = at.replace(hour=13, minute=10)
+        for offset, name in enumerate(names):
+            customer = self._make_customer(9110 + offset, name=name)
+            customer["expected_monthly_volume_cad"] = "4000"
+            self._fiat(
+                customer,
+                at=base + timedelta(minutes=35 * offset),
+                cad_value=Decimal("4500"),
+                instrument="CASH",
+                scenario="smurf_ring",
+                beneficiary=beneficiary,
+                device_id=device,
+            )
+            planted.append(customer)
+        self.expectations.append(
+            Expectation(
+                "smurf_ring",
+                planted[-1]["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-FI-005"],
+                note=(
+                    "Three customers each place CAD 4,500 cash with one beneficiary and share a device. "
+                    "No single conductor reaches the large-cash line."
+                ),
+            )
+        )
+
     # -- flagship demo ---------------------------------------------------
 
     def _demo_case(self, at: datetime) -> dict:
@@ -869,6 +1067,11 @@ class SyntheticGenerator:
         self._scenario_high_risk_jurisdiction(picks[1], day_within(15), sanctioned_party)
 
         self._demo_case(day_within(1))
+        self._scenario_lctr_single(day_within(2))
+        self._scenario_cash_structuring(day_within(3))
+        self._scenario_eftr(day_within(4))
+        self._scenario_rapid_rails(day_within(2))
+        self._scenario_smurf_ring(day_within(3))
 
         self.transactions.sort(key=lambda t: t["timestamp"])
         return Dataset(

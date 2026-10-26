@@ -15,4 +15,8 @@ Each module owns one stage of the pipeline and is independently testable:
     str_copilot    evidence-grounded STR narrative drafting
     mock_fintrac   simulated receiver and the submission service
     pipeline       ingestion and orchestration
+    instruments    virtual-currency / cash / EFT classification
+    fiat_rules     LCTR, EFTR, structuring and cross-rail indicators
+    customer_risk  explainable inherent and residual customer rating
+    link_analysis  shared wallet, device, IP and beneficiary clusters
 """

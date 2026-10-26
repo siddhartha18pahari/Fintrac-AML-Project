@@ -1,9 +1,56 @@
 # Deploying to Vercel
 
-FINTRAC Sentinel runs on Vercel as a single Python serverless function serving
+There are two deployable surfaces.
+
+| Surface | What it is | Vercel root directory | Needs a database |
+|---|---|---|---|
+| **Workspace** | Next.js investigator UI in `web/` | `web` | No |
+| **Operational console** | FastAPI API and the vanilla console | repository root | Yes — PostgreSQL |
+
+The workspace is the one to deploy when the goal is a public, zero-config demo.
+It reads a bundled snapshot of a real detection run. The operational console is
+the system of record for case workflow, and a serverless filesystem cannot hold
+that record.
+
+---
+
+## The workspace (`web/`)
+
+1. In the Vercel dashboard, import this repository.
+2. Set **Root Directory** to `web`.
+3. Framework preset: **Next.js**.
+4. Build command: `next build` (the default). Output: Next.js default. No install override.
+5. Do not set `DATABASE_URL`, `SECRET_KEY`, or any other variable. There is nothing to configure.
+6. Deploy.
+
+`GET /api/health` on that deployment returns:
+
+```json
+{ "ok": true, "storage": "bundled-snapshot", "synthetic": true }
+```
+
+The same project serves `/`, `/dashboard`, `/alerts`, `/customers`, `/transactions`, `/network`, `/reports` and `/rules`, plus JSON under `/api/*`.
+
+Regenerate the snapshot from the repository root when the catalogue or the generator changes, then redeploy:
+
+```bash
+python -m scripts.export_snapshot
+```
+
+That writes `web/src/data/snapshot.json`. The script runs the Python pipeline (valuation, 24-hour aggregation, rules, anomaly scores, customer risk, link analysis, STR drafts) against a fixed seed and writes the result. It does not call FINTRAC.
+
+---
+
+## The operational console
+
+FINTRAC Sentinel also runs on Vercel as a single Python serverless function serving
 both the API and the investigator console. The deployment is production-shaped
 but the data remains 100% synthetic and reports still go only to the built-in
 mock receiver.
+
+Leave **Root Directory** empty (the repository root) for this deployment. Do not
+point it at `web/` — that root is the Next.js workspace above. Use a second
+Vercel project if you want both.
 
 ---
 

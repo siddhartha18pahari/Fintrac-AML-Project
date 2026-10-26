@@ -5,12 +5,18 @@
 `Detect → Investigate → Explain → Report`
 
 - 24-hour FINTRAC aggregation with deduplicated candidates
-- configurable, versioned AML rule engine (15 indicators, 17 rule versions)
+- configurable, versioned AML rule engine (20 indicators in force, including cash and wires)
+- Large virtual currency, large cash, and international electronic-funds thresholds, kept apart from suspicion
+- structuring / smurfing below CAD 10,000, on one customer and across several
+- rapid movement of funds from one rail to another
 - explainable risk scoring with ranked drivers — never a bare number
-- transaction-graph analytics: fan-in, fan-out, circular flow, shared wallets
+- customer residual risk: inherent onboarding factors beside the alert score
+- transaction-graph analytics and linked-account clusters (shared wallet, device, IP, beneficiary)
+- unsupervised anomaly scores with ablation attributions
 - investigator case management with four-eyes approval and enforced controls
 - evidence-grounded STR drafting with an unsupported-claim verifier
 - LVCTR generation with five-level validation and JSON export
+- a Next.js investigator workspace that deploys on Vercel with no database
 - hash-chained, append-only audit trail
 
 > **All data in this project is synthetic.** Reports are submitted to a local
@@ -95,12 +101,47 @@ pip install -r requirements-dev.txt
 python -m pytest
 ```
 
+### Investigator workspace
+
+The Next.js app in `web/` is a read-only view of one detection run: alerts,
+customer risk, the ledger, a network graph and STR drafts. It does not need
+Postgres.
+
+```bash
+python -m scripts.export_snapshot
+```
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+The dev server is at <http://127.0.0.1:3000/>. `npm run build` is the production
+build (`next build`).
+
 ---
 
 ## Deploying
 
-The app runs on Vercel as a single Python serverless function serving both the
-API and the console — see **[docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md)**.
+Two Vercel projects, documented in **[docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md)**.
+
+### Workspace (no database)
+
+| Setting | Value |
+|---|---|
+| Root directory | `web` |
+| Framework | Next.js |
+| Build command | `next build` |
+| Environment variables | none |
+
+Import the repository, set the root directory to `web`, and deploy. Pages and
+`/api/*` read `web/src/data/snapshot.json`.
+
+### Operational console (needs Postgres)
+
+The FastAPI app runs as a single Python serverless function serving both the
+API and the vanilla console. Root directory is the repository root, not `web`.
 
 Three things are worth knowing before you start, because each one produces a
 demo that looks like it works and quietly does not:
@@ -175,7 +216,8 @@ Full script: [docs/DEMO_SCENARIOS.md](docs/DEMO_SCENARIOS.md).
 
 - **Backend** FastAPI · SQLAlchemy 2.0 · Pydantic v2 · SQLite (Postgres-ready via `DATABASE_URL`)
 - **Analytics** NetworkX · scikit-learn (Isolation Forest) · NumPy
-- **Frontend** vanilla ES modules, no build step, no external requests — including a hand-rolled force-directed SVG graph
+- **Operational console** vanilla ES modules, no build step, no external requests — including a hand-rolled force-directed SVG graph
+- **Workspace** Next.js · TypeScript · Tailwind, in `web/`, reading a bundled snapshot
 - **Validation** hand-written JSON Schema + four local rule levels + the receiver's verdict
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -210,8 +252,10 @@ fintrac-sentinel/
 │   └── static/              the investigator console (no build step)
 ├── scripts/
 │   ├── generate_synthetic.py   scenario-driven dataset generator
-│   └── seed.py                 seed + full detection run
-├── tests/                   111 tests, compliance regressions first
+│   ├── seed.py                 seed + full detection run
+│   └── export_snapshot.py      detection run → web/src/data/snapshot.json
+├── web/                     Next.js investigator workspace (Vercel root: web)
+├── tests/                   compliance regressions first, including cash and wires
 └── docs/
 ```
 
@@ -230,6 +274,7 @@ fintrac-sentinel/
 | [SECURITY.md](docs/SECURITY.md) | RBAC matrix, controls, what a real deployment must add |
 | [PRIVACY.md](docs/PRIVACY.md) | synthetic-data policy and PII handling |
 | [DEMO_SCENARIOS.md](docs/DEMO_SCENARIOS.md) | every planted scenario and what should fire |
+| [DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) | Next.js workspace and the FastAPI console |
 
 ---
 

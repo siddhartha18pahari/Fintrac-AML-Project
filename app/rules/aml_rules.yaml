@@ -15,7 +15,7 @@
 
 meta:
   schema: 1
-  catalogue_version: "2026.08"
+  catalogue_version: "2026.10"
 
 rules:
   # -------------------------------------------------------------------------
@@ -319,3 +319,106 @@ rules:
       jurisdictions: [KP, IR, MM, SY, AF]
     score:
       base: 12
+
+  # -------------------------------------------------------------------------
+  # Cash and electronic funds transfers
+  #
+  # These rules do not look at virtual-currency receipts. AML-FI-001 and
+  # AML-FI-002 are reporting observations (LCTR / EFTR). The others are
+  # suspicion indicators and never, on their own, mean a report must be filed.
+  # -------------------------------------------------------------------------
+  - id: AML-FI-001
+    version: "1.0"
+    name: Large cash receipts reached the reporting threshold
+    category: threshold
+    severity: reporting
+    evaluator: lctr_threshold
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Cash received for one conductor totalled CAD 10,000 or more in a single
+      receipt or across a consecutive 24-hour window. This is a Large Cash
+      Transaction Report observation. It is not, by itself, a ground for suspicion.
+    inputs:
+      window_hours: 24
+      threshold_cad: 10000
+    score:
+      base: 25
+
+  - id: AML-FI-002
+    version: "1.0"
+    name: International electronic funds transfers reached the reporting threshold
+    category: threshold
+    severity: reporting
+    evaluator: eftr_threshold
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      International electronic funds transfers in one direction totalled CAD
+      10,000 or more in a single transfer or across 24 hours. Domestic wires
+      are out of scope. This is an EFTR observation, not an indicator of suspicion.
+    inputs:
+      window_hours: 24
+      threshold_cad: 10000
+    score:
+      base: 25
+
+  - id: AML-FI-003
+    version: "1.0"
+    name: Cash receipts structured below the large-cash threshold
+    category: structuring
+    severity: high
+    evaluator: cash_structuring
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Three or more cash receipts each stay under CAD 10,000 and at or above
+      CAD 2,000, and together reach the threshold inside 48 hours. The pattern
+      is an indicator that the amount may have been broken up. It is not proof
+      of structuring, and a 24-hour total that itself crosses CAD 10,000 is
+      also an LCTR under AML-FI-001.
+    inputs:
+      window_hours: 48
+      min_transactions: 3
+      min_single_cad: 2000
+      threshold_cad: 10000
+    score:
+      base: 22
+
+  - id: AML-FI-004
+    version: "1.0"
+    name: Rapid movement of funds from one rail to another
+    category: velocity
+    severity: high
+    evaluator: rapid_cross_rail
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Value arrives as cash or by electronic transfer and a substantial share
+      leaves on a different rail — commonly virtual currency — within a few
+      hours. Virtual-currency pass-through on a single rail remains AML-VC-003.
+    inputs:
+      window_hours: 6
+      min_outflow_ratio: 0.7
+      min_cad: 5000
+    score:
+      base: 20
+
+  - id: AML-FI-005
+    version: "1.0"
+    name: Several customers place sub-threshold cash with one beneficiary
+    category: structuring
+    severity: high
+    evaluator: multi_conductor_cash
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Three or more customers deliver cash below CAD 10,000 to the same
+      beneficiary inside 24 hours, and the combined amount reaches the
+      threshold. Each conductor may stay under the LCTR line. The pattern is
+      the multi-party form of smurfing and is an indicator, not a finding of fact.
+    inputs:
+      window_hours: 24
+      min_customers: 3
+      threshold_cad: 10000
+    score:
+      base: 20

@@ -134,6 +134,7 @@ def collect_facts(session: Session, case: Case) -> dict:
         "first_transaction_at": timeline[0]["occurred_at"] if timeline else None,
         "last_transaction_at": timeline[-1]["occurred_at"] if timeline else None,
         "assets": sorted({t["asset"] for t in timeline}),
+        "instruments": sorted({t.get("instrument") or "VIRTUAL_CURRENCY" for t in timeline}),
         "indicators": [
             {
                 "rule_id": d.get("key"),
@@ -203,12 +204,23 @@ class TemplateNarrativeGenerator:
 
         # ---- WHAT / WHEN
         if facts["incoming_count"]:
-            sentences.append(
-                Sentence(
-                    f"Between {facts['first_transaction_at']} and {facts['last_transaction_at']}, "
+            rails = facts.get("instruments") or ["VIRTUAL_CURRENCY"]
+            if rails == ["VIRTUAL_CURRENCY"]:
+                what = (
                     f"the reporting entity recorded {facts['incoming_count']} incoming virtual-currency "
                     f"transfer(s) for this customer with a combined CAD-equivalent value of "
-                    f"{_money(facts['total_incoming_cad'])}.",
+                    f"{_money(facts['total_incoming_cad'])}."
+                )
+            else:
+                described = ", ".join(rail.replace("_", " ").lower() for rail in rails)
+                what = (
+                    f"the reporting entity recorded {facts['incoming_count']} incoming transaction(s) "
+                    f"({described}) for this customer with a combined CAD-equivalent value of "
+                    f"{_money(facts['total_incoming_cad'])}."
+                )
+            sentences.append(
+                Sentence(
+                    f"Between {facts['first_transaction_at']} and {facts['last_transaction_at']}, {what}",
                     evidence=txn_refs,
                     section="WHAT",
                 )
@@ -263,8 +275,10 @@ class TemplateNarrativeGenerator:
             )
 
         # ---- WHY SUSPICIOUS (indicators, stated as observations)
+        from ..config import REPORTING_RULE_IDS
+
         for indicator in facts["indicators"]:
-            if indicator["rule_id"] == "AML-VC-012":
+            if indicator["rule_id"] in REPORTING_RULE_IDS:
                 continue  # a reporting threshold is not an indicator of suspicion
             detail = (indicator.get("detail") or indicator.get("label") or "").strip()
             if not detail:
