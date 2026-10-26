@@ -1,10 +1,9 @@
 # Never commit data or secrets. This file is a convenience, not a control -
 # see docs/SECURITY.md.
-data/
-# The investigator workspace ships one synthetic detection snapshot so Vercel
-# can build without a database. Everything else under data/ stays ignored.
-!web/src/data/
-!web/src/data/snapshot.json
+# Anchored to the repository root. A bare `data/` pattern also matches
+# web/src/data/, and Vercel then omits the committed snapshot that
+# web/src/lib/snapshot.ts imports.
+/data/
 *.db
 *.db-wal
 *.db-shm
