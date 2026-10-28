@@ -141,21 +141,27 @@ def build(solver: str, snapshot: Path, out: Path) -> None:
         blob = f"{node.get('id', '')} {node.get('label', '')} {node.get('detail', '')}".lower()
         sanctioned = "sanction" in blob
         color = risk_color(risk_value)
+        # Group styling drops an explicit colour in PyVis, so set colour after the node exists.
         net.add_node(
             node["id"],
             label=label,
             title=tooltip(node),
-            color={
-                "background": color,
-                "border": "#e2c48a" if sanctioned else "#0c1612",
-                "highlight": {"background": "#fff7e8", "border": "#e2c48a"},
-            },
             size=node_size(kind, risk_value),
-            group=kind,
             borderWidth=3 if sanctioned else 1,
-            font={"color": "#e7f0ec", "size": 13 if kind in {"customer", "typology", "case"} else 11, "face": "Inter, system-ui, sans-serif"},
             mass=1.6 if kind == "customer" else 1,
         )
+        stored = net.node_map[node["id"]]
+        stored["group"] = kind
+        stored["color"] = {
+            "background": color,
+            "border": "#e2c48a" if sanctioned else "#0c1612",
+            "highlight": {"background": "#fff7e8", "border": "#e2c48a"},
+        }
+        stored["font"] = {
+            "color": "#e7f0ec",
+            "size": 13 if kind in {"customer", "typology", "case"} else 11,
+            "face": "Inter, system-ui, sans-serif",
+        }
 
     kept = 0
     for edge in edges:

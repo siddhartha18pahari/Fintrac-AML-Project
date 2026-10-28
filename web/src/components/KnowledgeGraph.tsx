@@ -380,23 +380,38 @@ export function KnowledgeGraph({
     rememberPath(found, `${found.length - 1} step${found.length === 2 ? "" : "s"}.`);
   }
 
-  function pathToSanction() {
-    const start = selected ?? [...seed][0];
-    if (!start) {
-      rememberPath(null, "No starting entity.");
-      return;
-    }
+  function nearestSanctionPath(start: string) {
     let best: string[] | null = null;
     for (const target of sanctioned) {
       const found = shortestPath(edges, start, target.id);
       if (found && (!best || found.length < best.length)) best = found;
     }
-    if (!best) {
-      rememberPath(null, "No path from this entity to a sanctions node.");
+    return best;
+  }
+
+  function pathToSanction() {
+    const fromSelected = selected ? nearestSanctionPath(selected) : null;
+    if (fromSelected) {
+      const end = byId.get(fromSelected[fromSelected.length - 1]);
+      rememberPath(fromSelected, `${fromSelected.length - 1} step${fromSelected.length === 2 ? "" : "s"} to ${end?.label ?? "sanctions"}.`);
       return;
     }
+    let best: string[] | null = null;
+    for (const node of nodes) {
+      if (node.kind !== "customer") continue;
+      const found = nearestSanctionPath(node.id);
+      if (found && (!best || found.length < best.length)) best = found;
+    }
+    if (!best) {
+      rememberPath(null, "No sanctions node is connected in this book.");
+      return;
+    }
+    const start = byId.get(best[0]);
     const end = byId.get(best[best.length - 1]);
-    rememberPath(best, `${best.length - 1} step${best.length === 2 ? "" : "s"} to ${end?.label ?? "sanctions"}.`);
+    rememberPath(
+      best,
+      `${start?.label ?? "A customer"} reaches ${end?.label ?? "sanctions"} in ${best.length - 1} step${best.length === 2 ? "" : "s"}. The entity that was selected has no such path.`,
+    );
   }
 
   function toggleKind(kind: string) {
