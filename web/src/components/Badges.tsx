@@ -1,12 +1,12 @@
 import { titleCase } from "@/lib/format";
 
 const TIER: Record<string, string> = {
-  CRITICAL: "bg-[#8c2f39] text-white",
-  HIGH: "bg-[#9a5720] text-white",
-  MEDIUM: "bg-[#f3e2b8] text-[#6d5314]",
-  LOW: "bg-[#d7ebe3] text-[#145743]",
-  REPORTING: "bg-[#d5e4f2] text-[#1c4f78]",
-  INFO: "bg-[#efe8da] text-[#5c5346]",
+  CRITICAL: "bg-critical/15 text-critical ring-1 ring-critical/30",
+  HIGH: "bg-high/15 text-high ring-1 ring-high/30",
+  MEDIUM: "bg-medium/15 text-medium ring-1 ring-medium/35",
+  LOW: "bg-low/15 text-low ring-1 ring-low/30",
+  REPORTING: "bg-info/15 text-info ring-1 ring-info/30",
+  INFO: "bg-line text-muted ring-1 ring-line",
 };
 
 export function Badge({ value, tone }: { value: string; tone?: string }) {

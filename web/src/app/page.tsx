@@ -43,15 +43,16 @@ export default function HomePage() {
 
   return (
     <div>
-      <header className="relative overflow-hidden border-b border-white/10 bg-spruce-deep text-[#f6f3ea]">
-        <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-[#9a7433]/30 blur-3xl" aria-hidden="true" />
-        <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#1d684f]/30 blur-3xl" aria-hidden="true" />
+      <header className="relative overflow-hidden border-b border-white/10 bg-[#071410] text-[#f6f3ea]">
+        <div className="aurora pointer-events-none absolute -left-24 top-0 h-80 w-80 rounded-full bg-[#9a7433]/40 blur-3xl" aria-hidden="true" />
+        <div className="aurora pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#1d684f]/40 blur-3xl" aria-hidden="true" />
+        <div className="aurora pointer-events-none absolute left-1/2 top-10 h-64 w-64 -translate-x-1/2 rounded-full bg-[#5b6fd6]/25 blur-3xl" aria-hidden="true" />
         <HeroField />
         <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brass-soft">Canada · AML monitoring</p>
-            <p className="font-display text-2xl text-white">FINTRAC Sentinel</p>
+            <p className="font-display text-2xl tracking-tight text-white">FINTRAC Sentinel</p>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-[#c9d8d1] sm:inline">Synthetic book · {data.meta.as_of.slice(0, 10)}</span>
@@ -65,7 +66,7 @@ export default function HomePage() {
         </div>
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.4fr_0.8fr] lg:py-20">
           <div>
-            <h1 className="rise max-w-xl font-display text-4xl leading-[1.05] tracking-tight text-white sm:text-6xl">
+            <h1 className="grad-text rise max-w-xl font-display text-5xl leading-[1.02] tracking-[-0.045em] sm:text-7xl">
               Detect. Explain. Then let a person decide.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#d5e3dc]">
@@ -78,6 +79,12 @@ export default function HomePage() {
               </Link>
               <Link href="/reports" className="rounded-full border border-white/30 px-5 py-2.5 text-sm font-semibold text-white">
                 Read an STR draft
+              </Link>
+              <Link href="/geography" className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-[#d5e3dc] hover:border-white/40 hover:text-white">
+                Open the map
+              </Link>
+              <Link href="/graph" className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-[#d5e3dc] hover:border-white/40 hover:text-white">
+                Trace the graph
               </Link>
             </div>
           </div>
@@ -120,7 +127,7 @@ export default function HomePage() {
             ["Travel rule", `${data.meta.counts.travel} incomplete wire`, "International EFTs are checked for originator and beneficiary fields. A blank is a record defect."],
             ["Typologies", `${data.meta.counts.trade} trade · ${data.meta.counts.msb} MSB · ${data.meta.counts.casino} casino`, "Invoice gaps, multi-beneficiary MSB payouts, and casino chips with almost no play."],
           ].map(([title, stat, detail]) => (
-            <article key={title} className="rounded-2xl border border-line bg-card p-5">
+            <article key={title} className="panel glass p-5">
               <h3 className="font-display text-2xl text-spruce">{title}</h3>
               <p className="mt-2 text-sm font-semibold">{stat}</p>
               <p className="mt-2 text-sm leading-relaxed text-muted">{detail}</p>
@@ -162,15 +169,15 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-3">
-          <article className="rounded-2xl border border-line bg-card p-5 lg:col-span-2">
+          <article className="panel glass p-5 lg:col-span-2">
             <h2 className="font-display text-2xl text-spruce">Deploy the workspace</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Point a Vercel project at the <code className="rounded bg-[#f6f1e6] px-1">web</code> directory.
-              Framework preset Next.js. Build command <code className="rounded bg-[#f6f1e6] px-1">next build</code>.
+              Point a Vercel project at the <code className="code">web</code> directory.
+              Framework preset Next.js. Build command <code className="code">next build</code>.
               No database, no environment variables, no external services. The pages and the API routes read a bundled snapshot produced by the Python detection pipeline.
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Regenerate that snapshot from the repository root with <code className="rounded bg-[#f6f1e6] px-1">python -m scripts.export_snapshot</code> after the rule catalogue changes.
+              Regenerate that snapshot from the repository root with <code className="code">python -m scripts.export_snapshot</code> after the rule catalogue changes.
               The operational FastAPI console remains the system of record for case workflow and is documented separately.
             </p>
           </article>

@@ -114,7 +114,7 @@ export function NetworkGraph({ nodes, edges }: { nodes: Node[]; edges: Edge[] })
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
-      <div className="overflow-hidden rounded-xl border border-line bg-[#fbf7ef]">
+      <div className="overflow-hidden rounded-3xl border border-line bg-[#071410] text-[#e7f0ec]">
         <svg viewBox="0 0 1000 680" className="h-[640px] w-full" role="img" aria-label="Transaction network">
           {edges.map((edge) => {
             const a = positions.get(edge.source);
@@ -154,7 +154,7 @@ export function NetworkGraph({ nodes, edges }: { nodes: Node[]; edges: Edge[] })
                     x={point.x + (point.x >= 500 ? 12 : -12)}
                     y={point.y + 4}
                     fontSize="12"
-                    fill="#16211c"
+                    fill="currentColor"
                     textAnchor={point.x >= 500 ? "start" : "end"}
                   >
                     {(node.label ?? node.id).slice(0, 26)}
@@ -179,7 +179,7 @@ export function NetworkGraph({ nodes, edges }: { nodes: Node[]; edges: Edge[] })
             <p className="pt-2 text-xs uppercase tracking-wide text-muted">{linked.length} linked edges</p>
             <ul className="max-h-80 space-y-2 overflow-auto text-xs">
               {linked.slice(0, 12).map((edge) => (
-                <li key={edge.id} className="rounded-md bg-[#f6f1e6] px-2 py-1.5">
+                <li key={edge.id} className="rounded-md bg-line/50 px-2 py-1.5">
                   <span className="font-medium">{edge.relation ?? "link"}</span>
                   {edge.cad_value ? <span className="num"> · CAD {edge.cad_value.toLocaleString("en-CA")}</span> : null}
                   {edge.asset ? <span> · {edge.asset}</span> : null}
