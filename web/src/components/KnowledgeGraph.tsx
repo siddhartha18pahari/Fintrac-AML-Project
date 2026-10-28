@@ -50,6 +50,53 @@ function layout(nodes: GraphNode[]) {
   return { pos, width, height };
 }
 
+function relax(nodes: GraphNode[], edges: GraphEdge[], seed: Map<string, { x: number; y: number }>) {
+  const pos = new Map([...seed].map(([id, point]) => [id, { ...point }]));
+  const ids = [...pos.keys()];
+  for (let step = 0; step < 48; step += 1) {
+    const force = new Map(ids.map((id) => [id, { x: 0, y: 0 }]));
+    for (let i = 0; i < ids.length; i += 1) {
+      for (let j = i + 1; j < ids.length; j += 1) {
+        const left = pos.get(ids[i])!;
+        const right = pos.get(ids[j])!;
+        let dx = left.x - right.x;
+        let dy = left.y - right.y;
+        const distance = Math.hypot(dx, dy) || 0.1;
+        const push = 520 / (distance * distance);
+        dx /= distance;
+        dy /= distance;
+        force.get(ids[i])!.x += dx * push;
+        force.get(ids[i])!.y += dy * push;
+        force.get(ids[j])!.x -= dx * push;
+        force.get(ids[j])!.y -= dy * push;
+      }
+    }
+    for (const edge of edges) {
+      const left = pos.get(edge.source);
+      const right = pos.get(edge.target);
+      if (!left || !right) continue;
+      const dx = right.x - left.x;
+      const dy = right.y - left.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const pull = (distance - 96) * 0.015;
+      force.get(edge.source)!.x += (dx / distance) * pull;
+      force.get(edge.source)!.y += (dy / distance) * pull;
+      force.get(edge.target)!.x -= (dx / distance) * pull;
+      force.get(edge.target)!.y -= (dy / distance) * pull;
+    }
+    for (const id of ids) {
+      const home = seed.get(id)!;
+      const point = pos.get(id)!;
+      const push = force.get(id)!;
+      push.x += (home.x - point.x) * 0.06;
+      push.y += (home.y - point.y) * 0.06;
+      point.x += Math.max(-14, Math.min(14, push.x));
+      point.y += Math.max(-14, Math.min(14, push.y));
+    }
+  }
+  return pos;
+}
+
 export function KnowledgeGraph({
   nodes,
   edges,
@@ -105,7 +152,37 @@ export function KnowledgeGraph({
     return ids;
   }, [focus, neighbours]);
   const visibleNodes = nodes.filter((node) => visibleIds.has(node.id));
-  const { pos, width, height } = useMemo(() => layout(visibleNodes), [visibleNodes]);
+  const placed = useMemo(() => {
+    const seed = layout(visibleNodes);
+    return { ...seed, relaxed: relax(visibleNodes, edges.filter((edge) => visibleIds.has(edge.source) && visibleIds.has(edge.target)), seed.pos) };
+  }, [visibleNodes, edges, visibleIds]);
+  const [blend, setBlend] = useState(1);
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setBlend(1);
+      return;
+    }
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const next = Math.min(1, (now - start) / 800);
+      setBlend(next);
+      if (next < 1) frame = requestAnimationFrame(tick);
+    };
+    setBlend(0);
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [placed]);
+  const pos = useMemo(() => {
+    const mixed = new Map<string, { x: number; y: number }>();
+    for (const [id, start] of placed.pos) {
+      const end = placed.relaxed.get(id) ?? start;
+      mixed.set(id, { x: start.x + (end.x - start.x) * blend, y: start.y + (end.y - start.y) * blend });
+    }
+    return mixed;
+  }, [placed, blend]);
+  const { width, height } = placed;
   const visibleEdges = edges.filter((edge) => visibleIds.has(edge.source) && visibleIds.has(edge.target));
   const pathSet = new Set(path ?? []);
   const matches = query.trim()
@@ -213,7 +290,7 @@ export function KnowledgeGraph({
         </div>
         <div
           ref={surface}
-          className="h-[70vh] min-h-[520px] cursor-grab touch-none active:cursor-grabbing"
+          className="relative h-[70vh] min-h-[520px] cursor-grab touch-none active:cursor-grabbing"
           onPointerDown={(event) => {
             if ((event.target as HTMLElement).closest("a, button")) return;
             drag.current = { x: event.clientX, y: event.clientY, cx: camera.x, cy: camera.y };
@@ -232,6 +309,15 @@ export function KnowledgeGraph({
           }}
         >
           <svg width="100%" height="100%" role="img" aria-label="Entity graph">
+            <defs>
+              <filter id="risk-glow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="3.2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
             <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.k})`}>
               {visibleEdges.map((edge) => {
                 const source = pos.get(edge.source);
@@ -257,7 +343,13 @@ export function KnowledgeGraph({
                 const active = node.id === selected;
                 return (
                   <g key={node.id} transform={`translate(${point.x} ${point.y})`} className="cursor-pointer" onClick={() => expand(node.id)}>
-                    <circle r={active ? 11 : 8} fill={riskColor(node.risk)} stroke={pathSet.has(node.id) ? "#8c2f39" : "transparent"} strokeWidth="2" />
+                    <circle
+                      r={active ? 11 : (node.risk ?? 0) >= 75 ? 10 : 8}
+                      fill={riskColor(node.risk)}
+                      filter={(node.risk ?? 0) >= 75 ? "url(#risk-glow)" : undefined}
+                      stroke={pathSet.has(node.id) ? "#8c2f39" : "transparent"}
+                      strokeWidth="2"
+                    />
                     <text x={14} y={4} fontSize="11" fill="currentColor">
                       {node.label}
                     </text>
@@ -266,12 +358,25 @@ export function KnowledgeGraph({
               })}
             </g>
           </svg>
+          <svg className="pointer-events-none absolute bottom-3 right-3 hidden h-28 w-40 rounded-xl border border-line bg-card/90 shadow-lg sm:block" aria-hidden="true" viewBox={`0 0 ${width} ${height}`}>
+              {visibleEdges.map((edge) => {
+                const source = pos.get(edge.source);
+                const target = pos.get(edge.target);
+                if (!source || !target) return null;
+                return <line key={`mini-${edge.id}`} x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke="currentColor" strokeOpacity="0.25" />;
+              })}
+              {visibleNodes.map((node) => {
+                const point = pos.get(node.id);
+                if (!point) return null;
+                return <circle key={`mini-${node.id}`} cx={point.x} cy={point.y} r={node.id === selected ? 18 : 10} fill={riskColor(node.risk)} />;
+              })}
+          </svg>
         </div>
-        <ul className="flex flex-wrap gap-3 border-t border-line px-3 py-2 text-xs text-muted">
+        <ul className="flex flex-wrap gap-3 border-t border-line px-3 py-2 text-xs text-muted" aria-label="Risk legend">
           <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#1d684f]" /> Under 25</li>
           <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#9a7433]" /> 25–49</li>
           <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#9a5720]" /> 50–74</li>
-          <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#8c2f39]" /> 75 and above</li>
+          <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#8c2f39] shadow-[0_0_8px_#8c2f39]" /> 75 and above, glowing</li>
         </ul>
       </div>
     </div>

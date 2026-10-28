@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV } from "@/lib/nav";
@@ -33,8 +34,10 @@ function NavItem({ href, label, active, variant }: { href: string; label: string
   const base = variant === "side" ? "block rounded-md px-3 py-1.5 text-sm" : "whitespace-nowrap rounded-full px-3 py-1.5 text-sm";
   const state = active ? "bg-[#e7d3a4] text-[#12352c] font-semibold" : "text-[#d7e4de] hover:bg-white/10 hover:text-white";
   return (
-    <Link href={href} className={`${base} ${state}`} aria-current={active ? "page" : undefined}>
-      {label}
-    </Link>
+    <motion.div whileHover={{ x: variant === "side" ? 3 : 0 }} transition={{ duration: 0.16 }}>
+      <Link href={href} className={`${base} ${state}`} aria-current={active ? "page" : undefined}>
+        {label}
+      </Link>
+    </motion.div>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 type Province = {
   code: string;
   name: string;
@@ -54,9 +56,17 @@ export function GeoMap({ provinces }: { provinces: Province[] }) {
         return (
           <g key={code}>
             {row ? (
-              <circle cx={place.x} cy={place.y} r={radius} fill={tone(row.mean_residual)}>
-                <title>{label}</title>
-              </circle>
+              <g>
+                {row.mean_residual >= 50 ? (
+                  <circle cx={place.x} cy={place.y} r={radius + 8} fill={tone(row.mean_residual)} opacity="0.25">
+                    <animate attributeName="r" values={`${radius + 4};${radius + 14};${radius + 4}`} dur="2.8s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.35;0.05;0.35" dur="2.8s" repeatCount="indefinite" />
+                  </circle>
+                ) : null}
+                <circle cx={place.x} cy={place.y} r={radius} fill={tone(row.mean_residual)}>
+                  <title>{label}</title>
+                </circle>
+              </g>
             ) : (
               <circle cx={place.x} cy={place.y} r={radius} fill="currentColor" opacity="0.25">
                 <title>{label}</title>

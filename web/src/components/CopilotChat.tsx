@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Hit = { id: string; title: string; source: string; score?: number; text: string };
 
@@ -30,6 +30,30 @@ export function CopilotChat({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [reply, setReply] = useState<Reply | null>(null);
+  const [streamed, setStreamed] = useState("");
+  const [streaming, setStreaming] = useState(false);
+
+  useEffect(() => {
+    if (!reply) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setStreamed(reply.answer);
+      setStreaming(false);
+      return;
+    }
+    setStreamed("");
+    setStreaming(true);
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index = Math.min(reply.answer.length, index + 6);
+      setStreamed(reply.answer.slice(0, index));
+      if (index >= reply.answer.length) {
+        window.clearInterval(timer);
+        setStreaming(false);
+      }
+    }, 16);
+    return () => window.clearInterval(timer);
+  }, [reply]);
 
   async function ask(text: string) {
     const trimmed = text.trim();
@@ -137,16 +161,22 @@ export function CopilotChat({
               <p className="text-[11px] font-semibold uppercase tracking-wider text-brass">
                 {reply.mode === "extractive" ? "Extractive answer" : `Model answer · ${reply.mode}`}
               </p>
-              <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{reply.answer}</div>
-              <h3 className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wider text-muted">Citations</h3>
-              <ul className="space-y-2">
-                {reply.hits.map((hit) => (
-                  <li key={hit.id} className="text-sm">
-                    <a href={hit.source} className="font-semibold text-info underline">{hit.title}</a>
-                    <span className="text-muted"> · {hit.id}{hit.score != null ? ` · ${hit.score}` : ""}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
+                {streamed}
+                {streaming ? <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-brass align-middle" aria-hidden="true" /> : null}
+              </div>
+              {!streaming ? (
+                <ul className="mt-5 flex flex-wrap gap-2" aria-label="Citations">
+                  {reply.hits.map((hit) => (
+                    <li key={hit.id}>
+                      <a href={hit.source} className="inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-info hover:border-brass">
+                        <span className="truncate">{hit.title}</span>
+                        <span className="num text-muted">{hit.score ?? ""}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </article>
           ) : null}
         </div>

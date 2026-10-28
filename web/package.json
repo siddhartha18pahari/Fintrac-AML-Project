@@ -10,6 +10,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.104",
     "ai": "^7.0.155",
+    "framer-motion": "^14.7.1",
     "next": "^15.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
