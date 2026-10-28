@@ -29,7 +29,7 @@ that record.
 { "ok": true, "storage": "bundled-snapshot", "synthetic": true }
 ```
 
-The same project serves `/`, `/dashboard`, `/alerts`, `/customers`, `/transactions`, `/network`, `/reports` and `/rules`, plus JSON under `/api/*`.
+The same project serves `/`, `/dashboard`, `/triage`, `/cases`, `/copilot`, `/alerts`, `/customers`, `/transactions`, `/graph`, `/network`, `/geography`, `/reports`, `/filings`, `/rules`, `/simulator` and `/performance`, plus JSON under `/api/*`. No environment variable is required. If `AI_GATEWAY_API_KEY` or `OPENAI_API_KEY` is added later, `/api/copilot` uses it for generation and otherwise returns an extractive answer.
 
 Regenerate the snapshot from the repository root when the catalogue or the generator changes, then redeploy:
 

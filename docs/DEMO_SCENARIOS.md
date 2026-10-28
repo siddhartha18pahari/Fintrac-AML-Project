@@ -122,6 +122,23 @@ The workspace snapshot (`python -m scripts.export_snapshot`) includes these
 scenarios. Harbour Cash Services and Maple Digital Imports are the two cases
 the overview page points at.
 
+## Screening, travel rule, and typologies
+
+| Scenario | What is planted | What should fire |
+|---|---|---|
+| `sanctions_fuzzy` | Customer named Soren Halburg, one edit from the fictional list entry Soren Halberg | `AML-SC-001` |
+| `sanctions_counterparty` | A payment to the fictional entity Orun Commodities DMCC | `AML-SC-001` on the beneficiary |
+| `pep_match` | Marisol Quayle, an exact fictional PEP | `AML-SC-002` |
+| `terrorist_property` | Nabil Qureshi, an exact fictional property-list name | `AML-TF-001`, a reporting observation |
+| `travel_rule_gap` | CAD 4,200 international wire with beneficiary account, address, and institution blank | `AML-TR-001` |
+| `trade_based` | Invoice CAD 48,000 against declared goods of CAD 12,000 | `AML-TB-001` and `AML-FI-002` |
+| `trade_within_tolerance` | Invoice about 11 percent above the goods value, under both lines | nothing |
+| `msb_payouts` | An MSB takes CAD 6,400 cash and pays four beneficiaries by domestic EFT | `AML-TB-002` |
+| `casino_minimal_play` | CAD 9,000 in chips, CAD 450 of play, redeemed to a third party | `AML-TB-003` |
+| `casino_ordinary_play` | CAD 5,000 buy-in with CAD 3,500 of play | nothing |
+
+The names live in `app/rules/screening_sample.yaml`. That file is fictional. A score is not a legal designation.
+
 ---
 
 ## Things to try in the console

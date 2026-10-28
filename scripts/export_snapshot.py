@@ -41,15 +41,21 @@ from app.models import (  # noqa: E402
     AnomalyScore,
     Case,
     Customer,
+    Party,
     Transaction,
 )
 from app.serializers import aggregation_json, alert_json, case_json, customer_json, transaction_json  # noqa: E402
 from app.services import (  # noqa: E402
+    book_metrics,
     customer_risk,
+    draft_filings,
     graph_engine,
+    knowledge_graph,
     link_analysis,
     pipeline,
+    retrieval,
     rules_engine,
+    screening,
     str_copilot,
 )
 from app.util import cad  # noqa: E402
@@ -131,6 +137,14 @@ def build() -> dict:
         )
 
         txn_json = [transaction_json(txn, customer=customer_rows.get(txn.customer_id)) for txn in transactions]
+        party_rows = {party.id: party for party in session.execute(select(Party)).scalars()}
+        for txn, payload in zip(transactions, txn_json):
+            party = party_rows.get(txn.beneficiary_id) if txn.beneficiary_id else None
+            if party is None:
+                continue
+            context = dict(payload.get("context") or {})
+            context["beneficiary_country"] = party.country
+            payload["context"] = context
         alert_json_rows = [alert_json(alert, customer=customer_rows.get(alert.customer_id)) for alert in alerts]
         case_rows = [case_json(case, customer=customer_rows.get(case.customer_id), detail=True) for case in cases]
 
@@ -200,7 +214,14 @@ def build() -> dict:
             rating = ratings[customer.id].as_dict()
             base = customer_json(customer)
             base.pop("kyc", None)
-            customer_payload.append({**base, "profile": _profile(customer), "risk": rating})
+            customer_payload.append(
+                {
+                    **base,
+                    "profile": _profile(customer),
+                    "risk": rating,
+                    "screening": screening.summarize(customer.name),
+                }
+            )
 
         anomaly_payload = [
             {
@@ -221,6 +242,39 @@ def build() -> dict:
         for item in customer_payload:
             tiers[item["risk"]["tier"]] += 1
 
+        def _rule_count(rule_id: str) -> int:
+            return sum(1 for row in alert_json_rows if row["rule_id"] == rule_id)
+
+        tuning = book_metrics.tuning_snapshot(session)
+        catalogue = rules_engine.catalogue_summary()
+        expectations = [item.as_dict() for item in dataset.expectations]
+        performance = book_metrics.labelled_performance(
+            expectations=expectations,
+            alerts=alert_json_rows,
+            customers=customer_payload,
+            anomalies=anomaly_payload,
+            rules=catalogue,
+        )
+        geo = book_metrics.geography(customer_payload, txn_json, alert_json_rows)
+        filings = draft_filings.build_filings(
+            reports=drafts,
+            alerts=alert_json_rows,
+            customers=customer_payload,
+            transactions=txn_json,
+        )
+        entity_graph = knowledge_graph.build_graph(session, as_of=END)
+        guidance = [passage.as_dict() for passage in retrieval.load_passages()]
+        screening_hits = [
+            {
+                "customer_id": item["id"],
+                "customer_reference": item["customer_id"],
+                "customer_name": item["name"],
+                "hits": item["screening"]["hits"],
+            }
+            for item in customer_payload
+            if item["screening"]["hits"]
+        ]
+
         snapshot = {
             "meta": {
                 "product": "FINTRAC Sentinel",
@@ -230,6 +284,7 @@ def build() -> dict:
                 "customers_requested": CUSTOMERS,
                 "days": DAYS,
                 "catalogue_version": rules_engine.load_catalogue().catalogue_version,
+                "screening_list": screening.list_meta(),
                 "disclaimer": (
                     "Every customer, wallet and transaction in this snapshot is synthetic. "
                     "Nothing here is filed with FINTRAC. Indicators are not findings that "
@@ -244,6 +299,18 @@ def build() -> dict:
                     "lctr": len(lctr),
                     "eftr": len(eftr),
                     "str_drafts": len(drafts),
+                    "filings": len(filings),
+                    "sanctions": _rule_count("AML-SC-001"),
+                    "pep": _rule_count("AML-SC-002"),
+                    "tpr": _rule_count("AML-TF-001"),
+                    "travel": _rule_count("AML-TR-001"),
+                    "trade": _rule_count("AML-TB-001"),
+                    "msb": _rule_count("AML-TB-002"),
+                    "casino": _rule_count("AML-TB-003"),
+                    "screening_hits": len(screening_hits),
+                    "graph_nodes": len(entity_graph["nodes"]),
+                    "graph_edges": len(entity_graph["edges"]),
+                    "guidance": len(guidance),
                 },
             },
             "kpis": {
@@ -254,13 +321,25 @@ def build() -> dict:
                 "lctr": len(lctr),
                 "eftr": len(eftr),
                 "str_drafts": len(drafts),
+                "filings": len(filings),
+                "sanctions": _rule_count("AML-SC-001"),
+                "pep": _rule_count("AML-SC-002"),
+                "tpr": _rule_count("AML-TF-001"),
+                "travel": _rule_count("AML-TR-001"),
                 "high_residual": sum(1 for item in customer_payload if item["risk"]["tier"] in {"HIGH", "CRITICAL"}),
                 "tiers": dict(tiers),
                 "rules": [{"rule_id": rule_id, "count": count} for rule_id, count in sorted(rule_counts.items(), key=lambda item: -item[1])],
             },
             "series": series,
             "rules": rules_engine.catalogue_summary(),
-            "scenarios": [item.as_dict() for item in dataset.expectations],
+            "scenarios": expectations,
+            "screening_hits": screening_hits,
+            "tuning": tuning,
+            "performance": performance,
+            "geography": geo,
+            "filings": filings,
+            "knowledge_graph": entity_graph,
+            "guidance": guidance,
             "customers": customer_payload,
             "transactions": txn_json,
             "alerts": alert_json_rows,

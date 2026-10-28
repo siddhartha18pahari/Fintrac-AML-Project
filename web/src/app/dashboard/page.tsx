@@ -31,6 +31,22 @@ export default function DashboardPage() {
         title="The book, as of the snapshot"
         lede={`${counts.transactions} synthetic transactions across ${counts.customers} customers. Indicators are inputs to a review. They are not a disposition.`}
       />
+      <nav aria-label="Workspace tools" className="mb-6 flex flex-wrap gap-2 text-sm">
+        {[
+          ["/triage", "Triage queue"],
+          ["/cases", "Cases"],
+          ["/simulator", "Rule simulator"],
+          ["/performance", "Labelled quality"],
+          ["/graph", "Knowledge graph"],
+          ["/copilot", "AML copilot"],
+          ["/geography", "Geography"],
+          ["/filings", "Draft filings"],
+        ].map(([href, label]) => (
+          <Link key={href} href={href} className="rounded-full border border-line bg-card px-3 py-1.5 font-semibold hover:border-brass">
+            {label}
+          </Link>
+        ))}
+      </nav>
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map(([label, value, note]) => (
           <article key={label} className="rounded-2xl border border-line bg-card px-4 py-4">
@@ -45,14 +61,14 @@ export default function DashboardPage() {
         <article className="rounded-2xl border border-line bg-card p-5">
           <h2 className="font-display text-2xl text-spruce">Incoming value</h2>
           <p className="mb-3 text-sm text-muted">Last three weeks of receipts, split by rail. Cash spikes are the planted LCTR and structuring days.</p>
-          <VolumeChart />
+          <VolumeChart series={data.series.slice(-21)} />
         </article>
         <article className="rounded-2xl border border-line bg-card p-5">
           <h2 className="font-display text-2xl text-spruce">Residual risk</h2>
           <p className="mb-4 text-sm text-muted">Inherent onboarding risk blended with the open alert score. {counts.customers} relationships.</p>
-          <TierBars />
+          <TierBars tiers={data.kpis.tiers} total={counts.customers} />
           <h3 className="mb-3 mt-6 text-sm font-semibold uppercase tracking-wider text-muted">Most common rules</h3>
-          <RuleBars />
+          <RuleBars rules={data.kpis.rules} />
         </article>
       </section>
 

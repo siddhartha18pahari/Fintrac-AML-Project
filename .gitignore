@@ -26,3 +26,4 @@ Thumbs.db
 .vercel/
 web/node_modules/
 web/.next/
+web/tsconfig.tsbuildinfo

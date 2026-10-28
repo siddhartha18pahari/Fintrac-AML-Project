@@ -153,6 +153,7 @@ def receipt(
     counterparty_country: str | None = None,
     counterparty_institution: str | None = None,
     device_id: str | None = None,
+    context: dict | None = None,
 ):
     """Ingest one transaction with an exact CAD value.
 
@@ -185,10 +186,8 @@ def receipt(
         payload["counterparty_country"] = counterparty_country
     if counterparty_institution:
         payload["counterparty_institution"] = counterparty_institution
-    if device_id:
-        payload.setdefault("context", {})
-        # context is applied below; stash on the payload for the pipeline.
-        payload["context"] = {"device_id": device_id}
+    if device_id or context:
+        payload["context"] = {**(context or {}), **({"device_id": device_id} if device_id else {})}
     if beneficiary is not None:
         payload["beneficiary_id"] = beneficiary.external_id
         payload["beneficiary_name"] = beneficiary.name

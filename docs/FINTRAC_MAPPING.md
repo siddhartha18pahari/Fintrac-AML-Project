@@ -221,10 +221,11 @@ submitted, and `settings.submission_endpoint` is `mock`.
 The STR path produces a **canonical body** (subject, indicators, timeline,
 narrative, citations, action taken) and validates it for completeness.
 
-It does **not** claim a FINTRAC STR schema mapping. That schema was not
-available to reconcile against, and inventing a plausible-looking one would be
-worse than declaring the gap: a payload that looks official and is wrong is more
-dangerous than an obviously internal one.
+It does **not** claim an official FINTRAC STR, LCTR, EFTR, or terrorist-property
+schema. The workspace drafts in `app/services/draft_filings.py` use
+FINTRAC-like field names, mark themselves `sentinel-draft-1`, and say in the
+document that nothing has been submitted. A payload that looked official and
+was wrong would be worse than an obviously internal one.
 
 To add it: implement `to_fintrac_str(canonical)` alongside `to_fintrac_lvctr`,
 add its schema to `schemas_json/`, and extend `report_builder.build_report`. The

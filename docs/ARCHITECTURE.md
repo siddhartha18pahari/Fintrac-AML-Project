@@ -64,6 +64,14 @@ The Next.js workspace in `web/` does not reimplement those stages. `scripts/expo
 runs them and writes `web/src/data/snapshot.json`, which the workspace and its
 API routes read. Regenerating the file is how a rule change reaches the UI.
 
+`knowledge_graph.py` turns the same run into entities and edges: customers,
+cases, alerts, rules, typologies, wallets, devices, IPs and parties. Path
+finding on that graph is unweighted and undirected. `retrieval.py` ranks
+`app/corpus/guidance.yaml` with BM25. Those notes are original summaries of
+public FINTRAC pages, each one cited. The workspace copilot uses the same
+ranking. A model answers only when `AI_GATEWAY_API_KEY` or `OPENAI_API_KEY`
+is set, through the Vercel AI SDK. Otherwise the reply is the retrieved notes.
+
 ---
 
 ## Key decisions

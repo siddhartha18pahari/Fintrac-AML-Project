@@ -270,6 +270,7 @@ class SyntheticGenerator:
         counterparty_country: str = "CA",
         counterparty_institution: str | None = None,
         device_id: str | None = None,
+        extra_context: dict | None = None,
     ) -> dict:
         """Cash or electronic-funds movement. CAD is the asset; the rate is par."""
         amount = Decimal(str(cad_value)).quantize(Decimal("0.01"))
@@ -302,6 +303,8 @@ class SyntheticGenerator:
                 "counterparty_country": counterparty_country,
             },
         }
+        if extra_context:
+            payload["context"].update(extra_context)
         if counterparty_institution:
             payload["counterparty_institution"] = counterparty_institution
             payload["context"]["counterparty_institution"] = counterparty_institution
@@ -416,24 +419,34 @@ class SyntheticGenerator:
         self.customers.append(customer)
         return customer
 
-    def _make_party(self, index: int, kind: str, *, entity: bool = False, country: str = "CA") -> dict:
-        if entity:
+    def _make_party(
+        self,
+        index: int,
+        kind: str,
+        *,
+        entity: bool = False,
+        country: str = "CA",
+        name: str | None = None,
+    ) -> dict:
+        if name:
+            display = name
+        elif entity:
             head, tail = self.rng.choice(BUSINESS_WORDS)
-            name = f"{head} {tail} Inc."
+            display = f"{head} {tail} Inc."
         else:
-            name = f"{self.rng.choice(GIVEN_NAMES)} {self.rng.choice(SURNAMES)}"
+            display = f"{self.rng.choice(GIVEN_NAMES)} {self.rng.choice(SURNAMES)}"
         party = {
             "party_id": f"{'ben' if kind == 'BENEFICIARY' else 'tp'}_{index:04d}",
             "kind": kind,
-            "name": name,
+            "name": display,
             "party_type": "ENTITY" if entity else "PERSON",
             "country": country,
             "kyc": (
-                {"legal_name": name, "client_number": f"CN{index:06d}"}
-                if entity
+                {"legal_name": display, "client_number": f"CN{index:06d}"}
+                if entity or " " not in display
                 else {
-                    "surname": name.split()[-1],
-                    "given_name": name.split()[0],
+                    "surname": display.split()[-1],
+                    "given_name": display.split()[0],
                     "client_number": f"CN{index:06d}",
                     "relationship_type_code": "5",
                 }
@@ -859,6 +872,14 @@ class SyntheticGenerator:
             international=True,
             counterparty_country="DE",
             counterparty_institution="Nordhalle Bank AG",
+            extra_context={
+                "travel": self._travel_block(
+                    originator="Owen Lindqvist",
+                    beneficiary="Klaus Reinhardt",
+                    institution="Nordhalle Bank AG",
+                    address="Hauptstrasse 12, Hamburg, DE",
+                )
+            },
         )
         self.expectations.append(
             Expectation(
@@ -932,6 +953,349 @@ class SyntheticGenerator:
                     "Three customers each place CAD 4,500 cash with one beneficiary and share a device. "
                     "No single conductor reaches the large-cash line."
                 ),
+            )
+        )
+
+    def _travel_block(
+        self,
+        *,
+        originator: str,
+        beneficiary: str,
+        institution: str,
+        address: str = "Trade Centre, Dubai, AE",
+        complete: bool = True,
+    ) -> dict:
+        return {
+            "originator_name": originator,
+            "originator_account": "CA77SENTINEL001928",
+            "originator_address": "120 King Street West, Toronto, ON, CA",
+            "beneficiary_name": beneficiary,
+            "beneficiary_account": "AE070331234567890123456" if complete else "",
+            "beneficiary_address": address if complete else "",
+            "beneficiary_institution": institution if complete else "",
+        }
+
+    def _pin_place(self, customer: dict, province: str, city: str) -> None:
+        address = customer["kyc"].setdefault("address", {})
+        address["province"] = province
+        address["city"] = city
+        customer["expected_monthly_volume_cad"] = customer.get("expected_monthly_volume_cad") or "25000"
+
+    # -- screening, travel rule, trade, MSB, casino ----------------------
+
+    def _scenario_sanctions(self, at: datetime) -> None:
+        customer = self._make_customer(9201, name="Soren Halburg")
+        customer["expected_monthly_volume_cad"] = "25000"
+        customer["occupation_or_business"] = "Civil engineer"
+        self._pin_place(customer, "BC", "Vancouver")
+        self._receipt(
+            customer,
+            at=at.replace(hour=10, minute=15),
+            cad_value=Decimal("1800"),
+            asset="BTC",
+            sender_first_seen=at - timedelta(days=400),
+            scenario="sanctions_fuzzy",
+        )
+        self.expectations.append(
+            Expectation(
+                "sanctions_fuzzy",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-SC-001"],
+                note="Customer name Soren Halburg is one edit from sample sanctions entry Soren Halberg.",
+            )
+        )
+
+        payer = self._make_customer(9208, name="Jonas Pell")
+        payer["expected_monthly_volume_cad"] = "25000"
+        self._pin_place(payer, "AB", "Calgary")
+        listed = self._make_party(9301, "BENEFICIARY", entity=True, name="Orun Commodities DMCC", country="AE")
+        self._receipt(
+            payer,
+            at=at.replace(hour=11, minute=5),
+            cad_value=Decimal("1600"),
+            asset="USDT",
+            beneficiary=listed,
+            sender_first_seen=at - timedelta(days=200),
+            scenario="sanctions_counterparty",
+        )
+        self.expectations.append(
+            Expectation(
+                "sanctions_counterparty",
+                payer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-SC-001"],
+                note="Beneficiary is the fictional entity Orun Commodities DMCC on the sample sanctions list.",
+            )
+        )
+
+    def _scenario_pep(self, at: datetime) -> None:
+        customer = self._make_customer(9202, name="Marisol Quayle")
+        customer["expected_monthly_volume_cad"] = "25000"
+        customer["occupation_or_business"] = "Public office (sample PEP)"
+        customer["kyc_risk"] = "HIGH"
+        self._pin_place(customer, "ON", "Toronto")
+        self._receipt(
+            customer,
+            at=at.replace(hour=9, minute=40),
+            cad_value=Decimal("900"),
+            asset="ETH",
+            sender_first_seen=at - timedelta(days=120),
+            scenario="pep_match",
+        )
+        self.expectations.append(
+            Expectation(
+                "pep_match",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-SC-002"],
+                note="Exact match to the fictional PEP Marisol Quayle. Enhanced review, not a report.",
+            )
+        )
+
+    def _scenario_terrorist_property(self, at: datetime) -> None:
+        customer = self._make_customer(9203, name="Nabil Qureshi")
+        customer["expected_monthly_volume_cad"] = "25000"
+        self._pin_place(customer, "QC", "Montreal")
+        self._receipt(
+            customer,
+            at=at.replace(hour=15, minute=20),
+            cad_value=Decimal("6400"),
+            asset="BTC",
+            sender_first_seen=at - timedelta(days=400),
+            scenario="terrorist_property",
+        )
+        self.expectations.append(
+            Expectation(
+                "terrorist_property",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-TF-001"],
+                note="Exact match to the fictional terrorist-property sample. A TPR would be in question on a real list.",
+            )
+        )
+
+    def _scenario_travel_gap(self, at: datetime) -> None:
+        customer = self._make_customer(9204, name="Tamsin Crowe")
+        customer["expected_monthly_volume_cad"] = "25000"
+        self._pin_place(customer, "AB", "Calgary")
+        self._fiat(
+            customer,
+            at=at.replace(hour=13, minute=25),
+            cad_value=Decimal("4200"),
+            instrument="EFT",
+            direction="outgoing",
+            scenario="travel_rule_gap",
+            international=True,
+            counterparty_country="AE",
+            counterparty_institution="Wadi Settlement Bank",
+            extra_context={
+                "travel": self._travel_block(
+                    originator="Tamsin Crowe",
+                    beneficiary="Rashid Noor Trading",
+                    institution="Wadi Settlement Bank",
+                    complete=False,
+                )
+            },
+        )
+        self.expectations.append(
+            Expectation(
+                "travel_rule_gap",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-TR-001"],
+                note="CAD 4,200 international wire with beneficiary account, address, and institution blank.",
+            )
+        )
+
+    def _scenario_trade(self, at: datetime) -> None:
+        customer = self._make_customer(9205, entity=True, name="Aurora Cross-Border Trading Ltd.")
+        customer["occupation_or_business"] = "Wholesale import and export"
+        customer["expected_monthly_volume_cad"] = "40000"
+        self._pin_place(customer, "ON", "Toronto")
+        self._fiat(
+            customer,
+            at=at.replace(hour=16, minute=10),
+            cad_value=Decimal("48000"),
+            instrument="EFT",
+            direction="outgoing",
+            scenario="trade_based",
+            international=True,
+            counterparty_country="AE",
+            counterparty_institution="Gulf Settlement Bank",
+            extra_context={
+                "travel": self._travel_block(
+                    originator="Aurora Cross-Border Trading Ltd.",
+                    beneficiary="Harbour Goods General Trading",
+                    institution="Gulf Settlement Bank",
+                ),
+                "trade": {
+                    "invoice_cad": 48000,
+                    "declared_goods_cad": 12000,
+                    "goods_description": "plastic household articles",
+                    "hs_code": "3924.10",
+                    "shipment_reference": "SHP-4419",
+                },
+            },
+        )
+        self.expectations.append(
+            Expectation(
+                "trade_based",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-TB-001", "AML-FI-002"],
+                note="Invoice CAD 48,000 against declared goods of CAD 12,000, paid by international wire.",
+            )
+        )
+
+        quiet = self._make_customer(9209, entity=True, name="Keel and Spar Wholesale Ltd.")
+        quiet["occupation_or_business"] = "Wholesale food distribution"
+        quiet["expected_monthly_volume_cad"] = "30000"
+        self._pin_place(quiet, "NS", "Halifax")
+        self._fiat(
+            quiet,
+            at=at.replace(hour=12, minute=5),
+            cad_value=Decimal("8000"),
+            instrument="EFT",
+            direction="outgoing",
+            scenario="trade_within_tolerance",
+            international=True,
+            counterparty_country="US",
+            counterparty_institution="Seaboard Clearing Bank",
+            extra_context={
+                "travel": self._travel_block(
+                    originator="Keel and Spar Wholesale Ltd.",
+                    beneficiary="North Wharf Foods Inc.",
+                    institution="Seaboard Clearing Bank",
+                    address="18 Harbor Street, Boston, US",
+                ),
+                "trade": {
+                    "invoice_cad": 8000,
+                    "declared_goods_cad": 7200,
+                    "goods_description": "canned vegetables",
+                    "hs_code": "2005.99",
+                    "shipment_reference": "SHP-2281",
+                },
+            },
+        )
+        self.expectations.append(
+            Expectation(
+                "trade_within_tolerance",
+                quiet["customer_id"],
+                lvctr_expected=False,
+                alert_expected=False,
+                indicators_expected=[],
+                note="Invoice is about 11 percent above the declared goods value, under the 25 percent line, and under the EFTR line.",
+            )
+        )
+
+    def _scenario_msb(self, at: datetime) -> None:
+        customer = self._make_customer(9206, entity=True, name="Prairie Transfer MSB Ltd.")
+        customer["occupation_or_business"] = "Money services business"
+        customer["kyc_risk"] = "HIGH"
+        customer["expected_monthly_volume_cad"] = "30000"
+        self._pin_place(customer, "MB", "Winnipeg")
+        base = at.replace(hour=9, minute=0)
+        for index, amount in enumerate((Decimal("1600"), Decimal("1700"), Decimal("1500"), Decimal("1600"))):
+            self._fiat(
+                customer,
+                at=base + timedelta(minutes=40 * index),
+                cad_value=amount,
+                instrument="CASH",
+                scenario="msb_payouts",
+            )
+        for index, name in enumerate(("Payee North", "Payee East", "Payee West", "Payee South")):
+            beneficiary = self._make_party(9310 + index, "BENEFICIARY", name=name)
+            self._fiat(
+                customer,
+                at=base + timedelta(hours=10, minutes=20 * index),
+                cad_value=Decimal("1400"),
+                instrument="EFT",
+                direction="outgoing",
+                scenario="msb_payouts",
+                international=False,
+                counterparty_country="CA",
+                beneficiary=beneficiary,
+            )
+        self.expectations.append(
+            Expectation(
+                "msb_payouts",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-TB-002"],
+                note="MSB takes CAD 6,400 in cash and pays four beneficiaries by domestic EFT later the same day.",
+            )
+        )
+
+    def _scenario_casino(self, at: datetime) -> None:
+        customer = self._make_customer(9207, entity=True, name="Laurentian Palace Casino")
+        customer["occupation_or_business"] = "Casino and gaming"
+        customer["expected_monthly_volume_cad"] = "80000"
+        customer["kyc_risk"] = "HIGH"
+        self._pin_place(customer, "QC", "Montreal")
+        self._fiat(
+            customer,
+            at=at.replace(hour=20, minute=10),
+            cad_value=Decimal("9000"),
+            instrument="CASH",
+            scenario="casino_minimal_play",
+            extra_context={
+                "casino": {
+                    "chips_purchased_cad": 9000,
+                    "gaming_activity_cad": 450,
+                    "redemption_cad": 8500,
+                    "redemption_instrument": "EFT",
+                    "redemption_to_third_party": True,
+                    "third_party_name": "Payee North",
+                }
+            },
+        )
+        self.expectations.append(
+            Expectation(
+                "casino_minimal_play",
+                customer["customer_id"],
+                lvctr_expected=False,
+                alert_expected=True,
+                indicators_expected=["AML-TB-003"],
+                note="CAD 9,000 in chips, CAD 450 of play, redeemed to a third party. Under the large-cash line.",
+            )
+        )
+
+        healthy = self._make_customer(9210, entity=True, name="Fairway Gaming Hall")
+        healthy["occupation_or_business"] = "Casino and gaming"
+        healthy["expected_monthly_volume_cad"] = "60000"
+        self._pin_place(healthy, "BC", "Vancouver")
+        self._fiat(
+            healthy,
+            at=at.replace(hour=19, minute=5),
+            cad_value=Decimal("5000"),
+            instrument="CASH",
+            scenario="casino_ordinary_play",
+            extra_context={
+                "casino": {
+                    "chips_purchased_cad": 5000,
+                    "gaming_activity_cad": 3500,
+                    "redemption_cad": 1400,
+                    "redemption_instrument": "CASH",
+                    "redemption_to_third_party": False,
+                }
+            },
+        )
+        self.expectations.append(
+            Expectation(
+                "casino_ordinary_play",
+                healthy["customer_id"],
+                lvctr_expected=False,
+                alert_expected=False,
+                indicators_expected=[],
+                note="CAD 5,000 buy-in with CAD 3,500 of play. Above the minimal-play line.",
             )
         )
 
@@ -1072,6 +1436,13 @@ class SyntheticGenerator:
         self._scenario_eftr(day_within(4))
         self._scenario_rapid_rails(day_within(2))
         self._scenario_smurf_ring(day_within(3))
+        self._scenario_sanctions(day_within(6))
+        self._scenario_pep(day_within(7))
+        self._scenario_terrorist_property(day_within(5))
+        self._scenario_travel_gap(day_within(4))
+        self._scenario_trade(day_within(8))
+        self._scenario_msb(day_within(3))
+        self._scenario_casino(day_within(2))
 
         self.transactions.sort(key=lambda t: t["timestamp"])
         return Dataset(

@@ -21,6 +21,40 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+  --color-paper: #121a17;
+  --color-ink: #e7f0ec;
+  --color-card: #1c2823;
+  --color-line: #31443c;
+  --color-muted: #b7c7bf;
+  --color-brass: #e2c48a;
+  --color-brass-soft: #3d3424;
+  --color-spruce: #d7ebe3;
+  --color-spruce-deep: #071410;
+  --color-critical: #f0b4bc;
+  --color-high: #f0c09a;
+  --color-medium: #ead28a;
+  --color-low: #9ad7c4;
+  --color-info: #b9d4ee;
+}
+
+html.dark .bg-spruce {
+  background-color: #1d4a3c;
+}
+
+html.dark .bg-spruce-deep {
+  background-color: #071410;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: var(--color-card);
+  color: var(--color-ink);
 }
 
 body {
@@ -31,16 +65,79 @@ body {
   color: var(--color-ink);
 }
 
+html.dark body {
+  background:
+    radial-gradient(900px 420px at 0% -10%, rgba(226, 196, 138, 0.08), transparent 55%),
+    var(--color-paper);
+}
+
 ::selection {
   background: #e7d3a4;
   color: #16211c;
 }
 
 :focus-visible {
-  outline: 2px solid #9a7433;
+  outline: 2px solid var(--color-brass);
   outline-offset: 2px;
 }
 
 .num {
   font-variant-numeric: tabular-nums;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  color: var(--color-ink);
+  padding: 0.5rem 0.75rem;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 0.55s ease both;
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(231, 211, 164, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(231, 211, 164, 0.16) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 20% 20%, black, transparent 72%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media print {
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge, InstrumentTag } from "@/components/Badges";
 import { PageIntro, Shell } from "@/components/Shell";
+import { Timeline } from "@/components/Timeline";
 import { money, when } from "@/lib/format";
 import { alertsForCustomer, anomalyForCustomer, customerById, data, transactionsForCustomer } from "@/lib/snapshot";
 
@@ -19,10 +20,41 @@ export default async function CustomerPage({ params }: { params: Promise<Params>
   const customer = customerById(Number(id));
   if (!customer) notFound();
   const alerts = alertsForCustomer(customer.id);
-  const transactions = transactionsForCustomer(customer.id).slice().reverse().slice(0, 12);
+  const transactionsAll = transactionsForCustomer(customer.id);
+  const transactions = [...transactionsAll].reverse().slice(0, 8);
   const anomaly = anomalyForCustomer(customer.id);
   const report = data.reports.find((row) => row.customer_id === customer.id);
+  const caseRow = data.cases.find((row) => row.customer_id === customer.id);
+  const filing = data.filings.find((row) => row.customer_id === customer.id);
   const maxFactor = Math.max(...customer.risk.factors.map((factor) => factor.points), 1);
+  const timeline = [
+    {
+      at: customer.onboarded_at,
+      kind: "Onboarding",
+      title: "Relationship opened",
+      detail: `${customer.occupation_or_business}. Declared ${money(customer.expected_monthly_volume_cad)} a month.`,
+    },
+    ...transactionsAll.map((txn) => ({
+      at: txn.occurred_at,
+      kind: txn.instrument === "VIRTUAL_CURRENCY" ? "Virtual currency" : txn.instrument,
+      title: `${txn.direction === "INCOMING" ? "Received" : "Sent"} ${money(txn.cad_value)}`,
+      detail: txn.transaction_id,
+      href: `/transactions/${txn.id}`,
+    })),
+    ...alerts.map((alert) => ({
+      at: alert.occurred_at,
+      kind: "Alert",
+      title: alert.title,
+      detail: `${alert.rule_id}. ${alert.explanation.detail}`,
+      href: `/alerts/${alert.id}`,
+    })),
+    ...customer.screening.hits.map((hit) => ({
+      at: customer.onboarded_at,
+      kind: "Screening",
+      title: `${hit.kind} sample hit ${hit.entry_id}`,
+      detail: `${hit.query} scored ${hit.score.toFixed(2)} against ${hit.canonical_name}. This is the fictional list, not a legal designation.`,
+    })),
+  ];
 
   return (
     <Shell>
@@ -98,6 +130,41 @@ export default async function CustomerPage({ params }: { params: Promise<Params>
               </Link>
             </p>
           ) : null}
+          <div className="mt-4 flex flex-wrap gap-3 text-sm">
+            {caseRow ? <Link href={`/cases/${caseRow.id}`} className="font-semibold text-info underline">Case {caseRow.reference}</Link> : null}
+            {filing ? <Link href={`/filings/${filing.id}`} className="font-semibold text-info underline">{filing.kind} draft</Link> : null}
+            {customer.profile.province ? (
+              <Link href={`/geography`} className="font-semibold text-info underline">{customer.profile.city}, {customer.profile.province}</Link>
+            ) : null}
+          </div>
+        </article>
+      </section>
+      <section className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <article className="rounded-2xl border border-line bg-card p-5">
+          <h2 className="font-display text-2xl text-spruce">Timeline</h2>
+          <p className="mb-4 text-sm text-muted">Onboarding, movement, alerts and sample-list hits, newest first.</p>
+          <Timeline events={timeline} />
+        </article>
+        <article className="rounded-2xl border border-line bg-card p-5">
+          <h2 className="font-display text-2xl text-spruce">Name screening</h2>
+          {customer.screening.hits.length ? (
+            <ul className="mt-3 space-y-3 text-sm">
+              {customer.screening.hits.map((hit) => (
+                <li key={hit.entry_id}>
+                  <p className="font-semibold">{hit.kind} · {hit.entry_id}</p>
+                  <p className="text-muted">{hit.canonical_name} · score {hit.score.toFixed(2)} · {hit.program}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-muted">No sample-list hit at the 0.90 line.</p>
+          )}
+          {customer.screening.closest && customer.screening.hits.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">
+              Closest fictional name is {customer.screening.closest.canonical_name} at {customer.screening.closest.score.toFixed(2)}, under the line.
+            </p>
+          ) : null}
+          <p className="mt-4 text-xs leading-relaxed text-muted">{customer.screening.list.disclaimer}</p>
         </article>
       </section>
       <section className="mt-6">

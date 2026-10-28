@@ -37,12 +37,13 @@ const RAILS = [
 export default function HomePage() {
   const counts = data.meta.counts;
   const featured = data.scenarios.filter((item) =>
-    ["demo_maple", "cash_structuring", "eftr_international", "rapid_cross_rail", "smurf_ring", "near_threshold"].includes(item.scenario_type),
+    ["demo_maple", "sanctions_fuzzy", "terrorist_property", "travel_rule_gap", "trade_based", "msb_payouts", "casino_minimal_play", "cash_structuring"].includes(item.scenario_type),
   );
 
   return (
     <div>
-      <header className="border-b border-white/10 bg-spruce-deep text-[#f6f3ea]">
+      <header className="relative overflow-hidden border-b border-white/10 bg-spruce-deep text-[#f6f3ea]">
+        <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brass-soft">Canada · AML monitoring</p>
@@ -57,7 +58,7 @@ export default function HomePage() {
         </div>
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.4fr_0.8fr] lg:py-20">
           <div>
-            <h1 className="max-w-xl font-display text-4xl leading-[1.05] tracking-tight text-white sm:text-6xl">
+            <h1 className="rise max-w-xl font-display text-4xl leading-[1.05] tracking-tight text-white sm:text-6xl">
               Detect. Explain. Then let a person decide.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#d5e3dc]">
@@ -109,6 +110,27 @@ export default function HomePage() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-4 sm:px-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          {[
+            ["Sample-list screening", `${data.meta.counts.sanctions} sanctions · ${data.meta.counts.pep} PEP`, "Fuzzy name matching against a fictional sanctions and PEP list. A hit records the score. It is not a legal designation."],
+            ["Terrorist property", `${data.meta.counts.tpr} sample observation`, "A match on the fictional property list is kept apart from suspicion, the same way a large-cash threshold is."],
+            ["Travel rule", `${data.meta.counts.travel} incomplete wire`, "International EFTs are checked for originator and beneficiary fields. A blank is a record defect."],
+            ["Typologies", `${data.meta.counts.trade} trade · ${data.meta.counts.msb} MSB · ${data.meta.counts.casino} casino`, "Invoice gaps, multi-beneficiary MSB payouts, and casino chips with almost no play."],
+          ].map(([title, stat, detail]) => (
+            <article key={title} className="rounded-2xl border border-line bg-card p-5">
+              <h3 className="font-display text-2xl text-spruce">{title}</h3>
+              <p className="mt-2 text-sm font-semibold">{stat}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{detail}</p>
+            </article>
+          ))}
+        </div>
+        <p className="mt-4 text-sm">
+          <Link href="/triage" className="font-semibold text-info underline">Open the triage queue</Link>
+          <span className="text-muted"> · cases, a threshold simulator, labelled quality, a geographic view, and downloadable drafts.</span>
+        </p>
       </section>
 
       <section className="border-y border-line bg-card/70">

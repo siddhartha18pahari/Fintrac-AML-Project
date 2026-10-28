@@ -5,7 +5,7 @@
 `Detect → Investigate → Explain → Report`
 
 - 24-hour FINTRAC aggregation with deduplicated candidates
-- configurable, versioned AML rule engine (20 indicators in force, including cash and wires)
+- configurable, versioned AML rule engine, including cash, wires, screening and typology indicators
 - Large virtual currency, large cash, and international electronic-funds thresholds, kept apart from suspicion
 - structuring / smurfing below CAD 10,000, on one customer and across several
 - rapid movement of funds from one rail to another
@@ -16,7 +16,10 @@
 - investigator case management with four-eyes approval and enforced controls
 - evidence-grounded STR drafting with an unsupported-claim verifier
 - LVCTR generation with five-level validation and JSON export
-- a Next.js investigator workspace that deploys on Vercel with no database
+- sanctions, PEP and terrorist-property screening with fuzzy name matching against a bundled fictional list
+- travel-rule completeness checks on international electronic funds transfers
+- trade-based, MSB and casino typology indicators
+- a Next.js investigator workspace that deploys on Vercel with no database: triage with SLA timers, local case files, a threshold simulator, labelled-scenario quality, a geographic view, an explorable entity graph, an AML copilot over bundled guidance notes, and downloadable STR/LCTR/EFTR/TPR drafts
 - hash-chained, append-only audit trail
 
 > **All data in this project is synthetic.** Reports are submitted to a local
@@ -103,9 +106,10 @@ python -m pytest
 
 ### Investigator workspace
 
-The Next.js app in `web/` is a read-only view of one detection run: alerts,
-customer risk, the ledger, a network graph and STR drafts. It does not need
-Postgres.
+The Next.js app in `web/` is a view of one detection run: alerts, customer
+risk, the ledger, a network graph, STR drafts, triage, case notes, a rule
+simulator and draft filings. Case assignment and notes stay in the browser.
+It does not need Postgres.
 
 ```bash
 python -m scripts.export_snapshot
@@ -230,8 +234,8 @@ These are deliberate, and each one is enforced or documented rather than assumed
 
 - **It does not file anything.** `submission_endpoint` is hard-guarded to `mock`; anything else raises.
 - **It does not decide that money laundering occurred.** Rules produce *indicators*. The STR copilot's verifier rejects any sentence asserting criminality.
-- **It does not claim a FINTRAC STR schema mapping.** That schema was not available to reconcile against, so the STR path produces a canonical body and a narrative, and says so.
-- **It does not report precision or recall.** There are no adjudicated outcome labels in this deployment; reporting them against synthetic scenario tags would overstate what the system knows. Volume metrics are reported instead.
+- **It does not claim an official FINTRAC STR, LCTR, EFTR or TPR schema.** The workspace drafts use FINTRAC-like field names and say so in the document. The operational STR path still produces a canonical body and a narrative.
+- **It does not report precision or recall of money laundering.** The quality page reports recall of *planted scenario indicators* only, and it says that alerts outside those labels are unlabelled, not false positives. The anomaly model still has no adjudicated outcome labels. Volume metrics remain on the overview.
 - **It does not treat a threshold as suspicion.** An LVCTR obligation is arithmetic. An STR is a judgement, and only a person makes it.
 
 ---

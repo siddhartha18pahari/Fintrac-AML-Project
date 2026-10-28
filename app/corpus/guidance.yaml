@@ -1,0 +1,235 @@
+# Public FINTRAC guidance, summarised in Sentinel's own words.
+#
+# These passages are not copies of FINTRAC text. They are short study notes
+# for the copilot, each one pointing at a public page. They are not legal
+# advice and they are not a substitute for the current guidance.
+
+passages:
+  - id: lvctr-threshold
+    title: Large virtual currency transaction threshold
+    topics: [lvctr, threshold, virtual-currency]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/lvctr/lvctr-eng
+    text: >
+      A large virtual currency transaction report is about virtual currency
+      received, not about suspicion. The public reporting line is CAD 10,000
+      or more in virtual currency in the course of a single transaction.
+      Receiving is the direction that matters for this report. Sending virtual
+      currency onward does not, by itself, create the same large-receipt
+      report. The obligation is arithmetic. It is a different decision from
+      whether anyone has reasonable grounds to suspect money laundering or
+      terrorist financing.
+
+  - id: twenty-four-hour
+    title: The 24-hour rule for aggregation
+    topics: [lvctr, lctr, eftr, aggregation]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/24hour/1-eng
+    text: >
+      Several smaller transactions can add up to one reportable amount when
+      they occur inside a consecutive 24-hour window and they are related.
+      Public guidance describes grouping by the person who conducts the
+      transactions, by the beneficiary, or by the person on whose behalf the
+      transactions are made. The window is rolling and consecutive, not a
+      calendar day. Once a set of transactions has been reported together,
+      those same transactions are not aggregated again into a second report
+      of the same kind. Aggregation is how a reporting threshold is reached.
+      It does not, by itself, mean the activity is suspicious.
+
+  - id: lctr-threshold
+    title: Large cash transaction reports
+    topics: [lctr, cash, threshold]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/lctr/lctr-eng
+    text: >
+      A large cash transaction report applies when a reporting entity receives
+      CAD 10,000 or more in cash in a single transaction, or when cash
+      receipts that belong together reach that amount inside 24 hours. Cash
+      means currency and coins. A wire, an electronic transfer, and virtual
+      currency are not cash for this report. Crossing the line creates a
+      reporting observation. It is not a finding that the cash is proceeds of
+      crime, and it is not the same document as a suspicious transaction report.
+
+  - id: eftr-threshold
+    title: Electronic funds transfer reports
+    topics: [eftr, wire, international]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/eft/eft-eng
+    text: >
+      An electronic funds transfer report is aimed at international electronic
+      funds transfers of CAD 10,000 or more, including transfers that only
+      reach that amount once they are added together under the 24-hour rule.
+      The transfer has to cross Canada's border. A domestic wire, including
+      payroll between Canadian accounts, is outside this report. Direction
+      matters: incoming and outgoing international transfers are not mixed
+      into one total. As with the cash and virtual-currency thresholds, the
+      report records that the line was reached. It does not record suspicion.
+
+  - id: str-reasonable-grounds
+    title: Suspicious transaction reports and reasonable grounds
+    topics: [str, suspicion, reasonable-grounds]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/str-dod/str-dod-eng
+    text: >
+      A suspicious transaction report is filed when there are reasonable
+      grounds to suspect that a transaction, or an attempted transaction, is
+      related to the commission or attempted commission of a money laundering
+      or terrorist activity financing offence. Reasonable grounds to suspect
+      is a lower bar than proof, and it is also more than a hunch. Indicators
+      are clues that can support that judgement when they are considered
+      together with what the reporting entity knows about the client. No
+      single indicator is enough. The report explains the facts, the context,
+      and why those facts led to suspicion. It should not claim that a crime
+      has been proved.
+
+  - id: str-narrative
+    title: What a suspicion narrative needs
+    topics: [str, narrative, indicators]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/str-dod/str-dod-eng
+    text: >
+      A useful suspicion narrative answers who the client is, what they were
+      expected to do, what actually happened, which facts are unusual, and
+      what the reporting entity did about it. Amounts, dates, accounts, and
+      counterparties should be traceable to the file. Public guidance asks
+      for facts and the reasons they matter, not adjectives. If information
+      is missing, the gap should be named rather than filled in. A threshold
+      report such as a large cash or large virtual currency report can sit
+      beside a suspicious transaction report, but the threshold itself is not
+      the suspicion.
+
+  - id: vc-indicators
+    title: Virtual currency money laundering indicators
+    topics: [virtual-currency, indicators, structuring, pass-through]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/indicators-indicateurs/vc_mltf-eng
+    text: >
+      Public indicator material for virtual currency describes patterns that
+      can contribute to suspicion when they do not fit the client. Examples
+      include many wallets sending value to one client in a short time, value
+      arriving and leaving again almost immediately, exposure to mixers or
+      other high-risk services, and activity far above what the client
+      described at onboarding. New addresses, chain hopping, and counterparties
+      in higher-risk jurisdictions are further clues. Each one is an indicator.
+      None of them proves money laundering, and ordinary clients can resemble
+      a pattern for an innocent reason.
+
+  - id: structuring
+    title: Structuring and amounts kept just below a line
+    topics: [structuring, cash, smurfing]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/indicators-indicateurs/str-eng
+    text: >
+      Structuring is the pattern of breaking a sum into smaller pieces so that
+      no single piece reaches a reporting threshold. Public indicators include
+      repeated cash amounts just under CAD 10,000, several people delivering
+      sub-threshold cash for one beneficiary, and a client who asks about the
+      reporting line. The 24-hour rule can still make the combined cash
+      reportable even when each piece stays under the line. The pattern is a
+      reason to look. It is not, standing alone, proof that the person
+      intended to evade a report.
+
+  - id: travel-rule
+    title: Originator and beneficiary information on electronic transfers
+    topics: [travel-rule, eft, originator, beneficiary]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/eft/eft-eng
+    text: >
+      International electronic transfers are expected to carry enough
+      information to identify both ends. In practice that means the
+      originator's name and account or address, and the beneficiary's name,
+      account or address, and institution. A transfer that arrives or leaves
+      without those fields is incomplete. The gap is a record defect to cure
+      and, if it is deliberate or repeated, it can be one indicator among
+      others. A missing field is not itself a suspicious transaction report,
+      and a domestic transfer is a different control from an international one.
+
+  - id: terrorist-property
+    title: Terrorist property reports
+    topics: [tpr, terrorist-property, listed-person]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/tpr/tpr-eng
+    text: >
+      A terrorist property report is about property in a reporting entity's
+      possession or control that is owned or controlled by or on behalf of a
+      listed person or listed entity. It is a property-reporting duty. It is
+      not the same judgement as reasonable grounds to suspect, although the
+      same facts can also support a suspicious transaction report. Screening
+      against a list is how an institution notices the name. A resemblance
+      between names is a lead. It becomes a report only when the person and
+      the property match the legal test, which a fictional sample list cannot
+      satisfy.
+
+  - id: pep
+    title: Politically exposed persons
+    topics: [pep, screening, enhanced-review]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/client-clientele/pep/pep-eng
+    text: >
+      A politically exposed person is someone who holds, or has held, a senior
+      public office, and can include family members and close associates under
+      the applicable definition. The public point of the control is higher
+      inherent risk and, where the rules require it, enhanced measures: source
+      of funds, source of wealth, and closer monitoring. Being a politically
+      exposed person is not evidence of money laundering. A name match against
+      a sample list is a reason to review the relationship, not a reason to
+      file.
+
+  - id: sanctions-screening
+    title: Sanctions and listed-name screening
+    topics: [sanctions, screening, fuzzy-match]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/overview-apercu/guide1/1-eng
+    text: >
+      Name screening compares customers and counterparties with a sanctions or
+      listed-person list. Real programs publish official names and aliases.
+      A practical matcher normalises case and punctuation, tolerates a missing
+      middle name, a reordered surname, and small spelling differences, and
+      records the score. A high score is a hit for a person to review. It is
+      not a legal designation, and a demo system that ships a fictional list
+      must not be treated as screening against Canadian or United Nations lists.
+
+  - id: msb-typology
+    title: Money services business typology
+    topics: [msb, typology, third-party]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/indicators-indicateurs/msb_mltf-eng
+    text: >
+      Money services businesses move cash, wires, and often virtual currency
+      for people who are not always the account holder. Public indicators
+      include cash placed by one person and paid out to several others, rapid
+      conversion from cash into another rail, and volumes that do not fit the
+      stated business. Third-party payments are ordinary in remittance, so the
+      indicator is the combination: many beneficiaries, weak identification,
+      or value that does not match the declared service. The pattern supports
+      a review. It does not establish that the business is unregistered or
+      that the funds are illicit.
+
+  - id: casino-typology
+    title: Casino chip and minimal-play typology
+    topics: [casino, typology, chips]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/indicators-indicateurs/casino_mltf-eng
+    text: >
+      Casinos are reporting entities, and chips are a way to turn cash into a
+      transferable claim. A typology described in public indicator material is
+      the purchase of a large amount of chips, little or no actual play, and
+      then a redemption, sometimes to another person or by a transfer off the
+      floor. Recorded play that is only a small share of the buy-in is the
+      fact to explain. Minimal play can also be a short visit. The indicator
+      asks for the explanation. It does not conclude that the chips were used
+      to launder funds.
+
+  - id: trade-based
+    title: Trade-based money laundering indicators
+    topics: [trade, tbml, invoice]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/indicators-indicateurs/tbml-eng
+    text: >
+      Trade-based money laundering hides value in the price, quantity, or
+      quality of goods. Over-invoicing moves extra value to the seller.
+      Under-invoicing moves extra value to the buyer. Public descriptions also
+      include phantom shipments, where a payment has no goods, and mismatched
+      descriptions. A useful comparison is the invoice amount against a
+      declared customs or goods value for the same shipment. A large gap is an
+      indicator associated with that typology. It is not proof that the trade
+      was false, because quality, timing, and commercial terms can move a price.
+
+  - id: indicators-not-proof
+    title: Indicators are not determinations
+    topics: [indicators, governance, str]
+    source: https://fintrac-canafe.canada.ca/guidance-directives/transaction-operation/indicators-indicateurs/str-eng
+    text: >
+      FINTRAC publishes indicators to help reporting entities notice what may
+      be unusual. The publications say, in substance, that a match to an
+      indicator is not a requirement to file and is not a conclusion that
+      money laundering or terrorist financing occurred. Context matters: the
+      client's business, the expected volume, and whether several indicators
+      appear together. A monitoring system should show the observed fact, the
+      threshold it was compared with, and the transactions that are the
+      evidence, and then leave the filing decision to a person.
