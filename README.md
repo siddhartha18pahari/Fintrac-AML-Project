@@ -128,6 +128,27 @@ npm run dev
 The dev server is at <http://127.0.0.1:3000/>. `npm run build` is the production
 build (`next build`).
 
+### Entity graph (PyVis)
+
+The graph page embeds a self-contained HTML file built with PyVis and NetworkX
+from the bundled snapshot. Node colour and size follow residual risk, nodes are
+grouped by entity type, and each node has an HTML tooltip. Physics defaults to
+vis.js `forceAtlas2Based`. Pass `--solver barnesHut` for the Barnes–Hut model.
+
+```bash
+python -m scripts.build_pyvis_graph
+```
+
+That writes `web/public/graph/entity-graph.html` and inlines vis-network, so the
+page does not call a CDN. The file is committed. Regenerate it after
+`python -m scripts.export_snapshot` when the book changes. The same page can
+switch to the in-app graph, which clusters by type, focuses a search hit,
+dims non-neighbours, filters by risk and type, and highlights a path to a
+sanctions-screening entity.
+
+The geography page uses a Natural Earth world atlas committed at
+`web/public/geo/countries-50m.json` (world-atlas 2). It does not need an API key.
+
 ---
 
 ## Deploying

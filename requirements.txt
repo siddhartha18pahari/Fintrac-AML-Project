@@ -26,3 +26,8 @@ uvicorn[standard]>=0.30
 # and every rule-based control keeps working. `GET /api/health` reports
 # capabilities.anomaly_detection so you can see which mode is live.
 scikit-learn>=1.4
+
+# Builds web/public/graph/entity-graph.html. Not imported by the request path.
+# Drop this line if a serverless bundle is near the size cap; the Next.js app
+# ships the already-generated HTML and does not import PyVis.
+pyvis>=0.3.2

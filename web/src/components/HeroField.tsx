@@ -89,7 +89,7 @@ export function StatCounter({ value, label }: { value: number; label: string }) 
   return (
     <div className="glass rounded-2xl border border-white/15 px-4 py-3">
       <dt className="text-[11px] uppercase tracking-[0.16em] text-[#b7c9c0]">{label}</dt>
-      <dd ref={ref} className="num mt-1 font-display text-3xl text-white">
+      <dd ref={ref} className="num mt-1 text-3xl tracking-tight text-white">
         0
       </dd>
     </div>

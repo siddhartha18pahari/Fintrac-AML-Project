@@ -97,7 +97,7 @@ export default async function CustomerPage({ params }: { params: Promise<Params>
                   <span className="font-semibold">{factor.label}</span>
                   <span className="num text-muted">+{factor.points}</span>
                 </div>
-                <div className="mt-1 h-1.5 rounded-full bg-[#efe6d6]">
+                <div className="mt-1 h-1.5 rounded-full bg-line">
                   <div className="h-1.5 rounded-full bg-brass" style={{ width: `${(factor.points / maxFactor) * 100}%` }} />
                 </div>
                 <p className="mt-1 text-sm text-muted">{factor.detail}</p>
@@ -119,7 +119,7 @@ export default async function CustomerPage({ params }: { params: Promise<Params>
                       <span>{item.feature.replaceAll("_", " ")}</span>
                       <span className="num">{item.contribution.toFixed(3)}</span>
                     </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-[#efe6d6]">
+                    <div className="mt-1 h-1.5 rounded-full bg-line">
                       <div className="h-1.5 rounded-full bg-spruce" style={{ width: `${Math.min(100, Math.abs(item.contribution) * 400)}%` }} />
                     </div>
                   </li>

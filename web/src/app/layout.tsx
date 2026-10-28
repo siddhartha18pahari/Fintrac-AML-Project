@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
-import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { CommandPaletteHost } from "@/components/CommandPaletteHost";
 import { Shortcuts } from "@/components/Shortcuts";
 import "./globals.css";
 
-const source = Source_Sans_3({
+const sans = Geist({
   subsets: ["latin"],
-  variable: "--font-source",
+  variable: "--font-geist",
 });
 
-const fraunces = Fraunces({
+const mono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-geist-mono",
+});
+
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +31,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${source.variable} ${fraunces.variable} font-sans antialiased`}>
+      <body className={`${sans.variable} ${mono.variable} ${display.variable} font-sans antialiased`}>
         <script
           dangerouslySetInnerHTML={{
             __html:

@@ -53,7 +53,7 @@ export default function DashboardPage() {
           ["/geography", "Geography"],
           ["/filings", "Draft filings"],
         ].map(([href, label]) => (
-          <Link key={href} href={href} className="rounded-full border border-line bg-card px-3 py-1.5 font-semibold hover:border-brass">
+          <Link key={href} href={href} className="rounded-full border border-line bg-card/80 px-3 py-1.5 font-semibold backdrop-blur transition hover:-translate-y-0.5 hover:border-brass">
             {label}
           </Link>
         ))}
@@ -64,7 +64,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
-                <p className="num mt-1 font-display text-4xl text-spruce">{value}</p>
+                <p className="num mt-1 text-4xl tracking-tight text-spruce">{value}</p>
                 <p className="mt-1 text-sm text-muted">{note}</p>
               </div>
               <Sparkline values={spark} label={`${label} against recent volume`} />

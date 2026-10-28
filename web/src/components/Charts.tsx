@@ -73,7 +73,7 @@ export function RuleBars({ rules }: { rules: { rule_id: string; count: number }[
             <span className="font-medium">{row.rule_id}</span>
             <span className="num text-muted">{row.count}</span>
           </div>
-          <div className="h-2 rounded-full bg-[#efe6d6]">
+          <div className="h-2 rounded-full bg-line">
             <div className="h-2 rounded-full bg-spruce" style={{ width: `${(row.count / max) * 100}%` }} />
           </div>
         </li>
@@ -98,7 +98,7 @@ export function TierBars({ tiers, total }: { tiers: Record<string, number>; tota
         return (
           <li key={tier} className="grid grid-cols-[92px_1fr_32px] items-center gap-2 text-sm">
             <span>{tier[0] + tier.slice(1).toLowerCase()}</span>
-            <div className="h-2 rounded-full bg-[#efe6d6]">
+            <div className="h-2 rounded-full bg-line">
               <div className="h-2 rounded-full" style={{ width: `${(count / population) * 100}%`, background: colors[tier] }} />
             </div>
             <span className="num text-right text-muted">{count}</span>

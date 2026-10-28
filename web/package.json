@@ -10,16 +10,22 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.104",
     "ai": "^7.0.155",
+    "d3-geo": "^3.1.1",
     "framer-motion": "^14.7.1",
     "next": "^15.5.4",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-simple-maps": "^5.0.5",
+    "topojson-client": "^3.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
+    "@types/d3-geo": "^3.1.1",
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@types/topojson-client": "^3.1.5",
+    "@types/topojson-specification": "^1.0.5",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.2"
   }
