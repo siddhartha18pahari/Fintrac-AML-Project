@@ -1,0 +1,17 @@
+export const NAV = [
+  { href: "/dashboard", label: "Overview", key: "d", group: "Work" },
+  { href: "/triage", label: "Triage", key: "q", group: "Work" },
+  { href: "/cases", label: "Cases", key: "k", group: "Work" },
+  { href: "/copilot", label: "Copilot", key: "o", group: "Work" },
+  { href: "/alerts", label: "Alerts", key: "a", group: "Work" },
+  { href: "/customers", label: "Customers", key: "c", group: "Subjects" },
+  { href: "/transactions", label: "Transactions", key: "t", group: "Subjects" },
+  { href: "/graph", label: "Graph", key: "h", group: "Subjects" },
+  { href: "/network", label: "Network", key: "n", group: "Subjects" },
+  { href: "/geography", label: "Geography", key: "m", group: "Subjects" },
+  { href: "/reports", label: "STR drafts", key: "r", group: "Reporting" },
+  { href: "/filings", label: "Filings", key: "f", group: "Reporting" },
+  { href: "/rules", label: "Rules", key: "u", group: "Reporting" },
+  { href: "/simulator", label: "Simulator", key: "s", group: "Reporting" },
+  { href: "/performance", label: "Quality", key: "p", group: "Reporting" },
+];

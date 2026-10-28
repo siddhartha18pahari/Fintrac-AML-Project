@@ -60,15 +60,33 @@ in February is reproducible with February's parameters.
 | **AML-FI-003** | Cash receipts structured below the large-cash line | structuring | high | 22 | ≥3 cash receipts each in [CAD 2,000, 10,000) totalling ≥ CAD 10,000 within 48 hours |
 | **AML-FI-004** | Rapid movement of funds from one rail to another | velocity | high | 20 | ≥70% of value received on one rail leaves on another within 6 hours, inflow ≥ CAD 5,000 |
 | **AML-FI-005** | Several customers place sub-threshold cash with one beneficiary | structuring | high | 20 | ≥3 customers, each cash receipt under CAD 10,000, combined ≥ CAD 10,000 within 24 hours |
+| **AML-SC-001** | Name resembles the sample sanctions list | screening | high | 55 | customer, beneficiary, third party or travel-rule name scores ≥ 0.90 against the fictional sanctions list |
+| **AML-SC-002** | Name resembles the sample PEP list | screening | medium | 18 | same screen, fictional PEP list, score ≥ 0.90 |
+| **AML-TF-001** | Sample terrorist-property list matched a party | terrorist property | reporting | 30 | same screen, fictional terrorist-property list. A property-report observation, not an STR indicator |
+| **AML-TR-001** | International EFT missing travel-rule fields | travel rule | high | 40 | international EFT ≥ CAD 1,000 missing originator or beneficiary name, account, address, or beneficiary institution |
+| **AML-TB-001** | Trade payment diverges from declared goods | trade | high | 36 | invoice differs from declared goods by ≥ 25% and invoice ≥ CAD 1,000 |
+| **AML-TB-002** | MSB cash-in and payouts to several beneficiaries | typology | high | 44 | money-services business, ≥ CAD 5,000 cash in, ≥ 3 beneficiaries paid on another rail within 24 hours |
+| **AML-TB-003** | Casino chips redeemed after minimal play | typology | high | 44 | chips ≥ CAD 3,000, recorded play ≤ 20%, redeemed to a third party or by wire or virtual currency |
 
 Superseded versions retained for reproducibility: `AML-VC-001 v1.0`,
 `AML-VC-004 v1.0`.
 
-`AML-FI-001` and `AML-FI-002` are reporting observations, in the same sense as
-`AML-VC-012`. They are excluded from the STR copilot's suspicion section and
-they do not, by themselves, set `str_candidate`. They do open a case, because
-a reporting duty is work even when nobody is suspicious. Cash and wires never
-enter the LVCTR aggregation.
+`AML-FI-001`, `AML-FI-002` and `AML-TF-001` are reporting observations, in the
+same sense as `AML-VC-012`. They are excluded from the STR copilot's suspicion
+section and they do not, by themselves, set `str_candidate`. They do open a
+case, because a reporting duty is work even when nobody is suspicious. Cash
+and wires never enter the LVCTR aggregation.
+
+`AML-SC-001`, `AML-SC-002` and `AML-TF-001` compare names with
+[`app/rules/screening_sample.yaml`](../app/rules/screening_sample.yaml). That
+file is a fictional list. A score is not a legal designation. The matcher
+normalises case, punctuation and legal-form words, then keeps the best of an
+edit ratio, a token-sorted ratio, and a token-cover score so "Soren Halburg"
+still meets "Soren Halberg" and a reordered name still meets.
+
+`AML-TR-001` is a completeness check, not a suspicion rule. A domestic wire
+never enters it. `AML-TB-001`, `AML-TB-002` and `AML-TB-003` are typology
+indicators. None of them decides that laundering occurred.
 
 `AML-VC-003` (virtual-currency pass-through) measures the virtual-currency rail
 only. Cash that leaves as virtual currency is `AML-FI-004`, not a second copy

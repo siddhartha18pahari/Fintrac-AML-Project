@@ -10,11 +10,13 @@ export const metadata: Metadata = { title: "Customers" };
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; q?: string }>;
+  searchParams: Promise<{ sort?: string; q?: string; province?: string }>;
 }) {
-  const { sort, q } = await searchParams;
+  const { sort, q, province } = await searchParams;
   const query = (q ?? "").trim().toLowerCase();
+  const provinceCode = (province ?? "").trim().toUpperCase();
   const rows = sortCustomers(sort).filter((row) => {
+    if (provinceCode && (row.profile.province ?? "").toUpperCase() !== provinceCode) return false;
     if (!query) return true;
     return `${row.name} ${row.customer_id} ${row.occupation_or_business} ${row.profile.city ?? ""}`.toLowerCase().includes(query);
   });
@@ -24,7 +26,7 @@ export default async function CustomersPage({
       <PageIntro
         kicker="Customer risk"
         title="Inherent risk, then behaviour"
-        lede="The residual rating blends onboarding factors with the open alert score. Every point on a profile names the factor that produced it."
+        lede={provinceCode ? `Filtered to ${provinceCode}. The residual rating blends onboarding factors with the open alert score.` : "The residual rating blends onboarding factors with the open alert score. Every point on a profile names the factor that produced it."}
       />
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3" role="search">
         <label className="text-sm">

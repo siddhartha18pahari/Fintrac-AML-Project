@@ -36,6 +36,9 @@ the whole dataset from a seed:
 - **Risk tags** (`mixer`, `darknet_market`, `sanctioned`, …) are assigned by the
   generator to fabricated addresses. They are not sourced from any real
   blockchain-analytics provider and carry no real-world claim.
+- **The screening sample** in `app/rules/screening_sample.yaml` is a fictional
+  list written for this project. It is not a sanctions, PEP, or terrorist-property
+  register, and it must not be used to screen real people.
 
 Given the same `seed` and `end`, the output is identical. Nothing is sampled
 from any external source.

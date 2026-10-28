@@ -904,9 +904,11 @@ def evaluate(
     return findings
 
 
-# Importing registers the cash and EFT evaluators. Done last so the decorator
-# and Finding types already exist; the import is for its side effect.
+# Importing registers the cash, EFT, screening, and typology evaluators. Done
+# last so the decorator and Finding types already exist; the import is for its
+# side effect.
 from . import fiat_rules as _fiat_rules  # noqa: E402,F401
+from . import typology_rules as _typology_rules  # noqa: E402,F401
 
 
 def catalogue_summary() -> list[dict]:

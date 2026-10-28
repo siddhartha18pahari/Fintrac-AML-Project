@@ -1,0 +1,78 @@
+# Synthetic screening sample.
+#
+# These names are invented for this project. They are not a sanctions list, a
+# PEP register, or a terrorist-property list, and they must not be used to
+# screen real customers. A hit means "the fuzzy matcher cleared the sample
+# threshold", nothing more.
+
+meta:
+  id: sentinel-sample-list
+  version: "2026.11"
+  disclaimer: >
+    Fictional names bundled with FINTRAC Sentinel so the screening control can
+    be demonstrated offline. Not a legal designation.
+
+entries:
+  - id: SMP-001
+    name: Soren Halberg
+    aliases: ["Soren K Halberg", "S. Halberg"]
+    kind: SANCTIONS
+    program: SAMPLE-SANCTIONS
+    country: SE
+    note: Fictional person on the sample sanctions list.
+
+  - id: SMP-002
+    name: Orun Commodities DMCC
+    aliases: ["Orun Commodities"]
+    kind: SANCTIONS
+    program: SAMPLE-SANCTIONS
+    country: AE
+    note: Fictional entity on the sample sanctions list.
+
+  - id: SMP-003
+    name: Belvedere Front FZE
+    aliases: ["Belvedere Front"]
+    kind: SANCTIONS
+    program: SAMPLE-SANCTIONS
+    country: AE
+    note: Fictional entity on the sample sanctions list.
+
+  - id: SMP-004
+    name: Marisol Quayle
+    aliases: ["M. Quayle"]
+    kind: PEP
+    program: SAMPLE-PEP
+    country: CA
+    note: Fictional politically exposed person. No real office is implied.
+
+  - id: SMP-005
+    name: Idris Okonkwo
+    aliases: []
+    kind: PEP
+    program: SAMPLE-PEP
+    country: NG
+    note: Fictional politically exposed person.
+
+  - id: SMP-006
+    name: Anouk Vermeer
+    aliases: []
+    kind: PEP
+    program: SAMPLE-PEP
+    country: NL
+    note: Fictional politically exposed person.
+
+  - id: SMP-007
+    name: Nabil Qureshi
+    aliases: ["Nabil al-Qureshi"]
+    kind: TERRORIST_PROPERTY
+    program: SAMPLE-TERRORIST-PROPERTY
+    country: ""
+    note: Fictional entry standing in for a listed-person property check.
+
+  - id: SMP-008
+    name: Helvetia Relay SA
+    aliases: ["Helvetia Relay"]
+    kind: TERRORIST_PROPERTY
+    program: SAMPLE-TERRORIST-PROPERTY
+    country: CH
+    note: Fictional entity standing in for a listed-person property check.

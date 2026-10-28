@@ -17,6 +17,12 @@ Each module owns one stage of the pipeline and is independently testable:
     pipeline       ingestion and orchestration
     instruments    virtual-currency / cash / EFT classification
     fiat_rules     LCTR, EFTR, structuring and cross-rail indicators
+    typology_rules sanctions, PEP, terrorist property, travel rule, trade, MSB, casino
+    screening      fuzzy name matching against the bundled fictional list
     customer_risk  explainable inherent and residual customer rating
     link_analysis  shared wallet, device, IP and beneficiary clusters
+    book_metrics   threshold replay series and labelled-scenario recall
+    draft_filings  FINTRAC-like STR, LCTR, EFTR and TPR drafts
+    knowledge_graph  customers, cases, alerts, rules, wallets, devices, parties
+    retrieval      BM25 over bundled FINTRAC guidance summaries
 """

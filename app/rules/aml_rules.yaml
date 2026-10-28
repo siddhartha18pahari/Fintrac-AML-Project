@@ -15,7 +15,7 @@
 
 meta:
   schema: 1
-  catalogue_version: "2026.10"
+  catalogue_version: "2026.11"
 
 rules:
   # -------------------------------------------------------------------------
@@ -422,3 +422,151 @@ rules:
       threshold_cad: 10000
     score:
       base: 20
+
+  # -------------------------------------------------------------------------
+  # Screening against the bundled fictional list
+  #
+  # app/rules/screening_sample.yaml is not a sanctions, PEP, or terrorist
+  # property register. A hit is a fuzzy name match for demonstration.
+  # AML-TF-001 is a reporting observation in the same sense as an LCTR: it
+  # records that a property report would be in question. It does not assert
+  # that anyone is a listed person.
+  # -------------------------------------------------------------------------
+  - id: AML-SC-001
+    version: "1.0"
+    name: Name resembles an entry on the sample sanctions list
+    category: screening
+    severity: high
+    evaluator: sanctions_screen
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      The customer, a beneficiary, a third party, or a travel-rule name on the
+      transaction scores at or above the similarity line against the bundled
+      fictional sanctions list. Token order and small spelling differences
+      still match. This is not a legal designation.
+    inputs:
+      min_score: 0.90
+    score:
+      base: 55
+
+  - id: AML-SC-002
+    version: "1.0"
+    name: Name resembles an entry on the sample PEP list
+    category: screening
+    severity: medium
+    evaluator: pep_screen
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      A party name scores at or above the similarity line against the bundled
+      fictional politically-exposed-person list. A PEP match is a reason for
+      enhanced review. It is not an indication that a report must be filed.
+    inputs:
+      min_score: 0.90
+    score:
+      base: 18
+
+  - id: AML-TF-001
+    version: "1.0"
+    name: Sample terrorist-property list matched a party on the transaction
+    category: terrorist_property
+    severity: reporting
+    evaluator: terrorist_property_screen
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      A party name matches the bundled fictional terrorist-property sample.
+      On a real listed-person match, a Terrorist Property Report would have
+      to be considered for property in the reporting entity's possession or
+      control. This sample hit does not create that duty and is not an STR
+      indicator by itself.
+    inputs:
+      min_score: 0.90
+    score:
+      base: 30
+
+  # -------------------------------------------------------------------------
+  # Travel rule and typologies
+  # -------------------------------------------------------------------------
+  - id: AML-TR-001
+    version: "1.0"
+    name: International EFT is missing travel-rule originator or beneficiary fields
+    category: travel_rule
+    severity: high
+    evaluator: travel_rule_completeness
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      An international electronic funds transfer at or above CAD 1,000 does
+      not carry the originator and beneficiary name, account, address, and
+      beneficiary institution the travel rule expects. Domestic wires are out
+      of scope. A gap is a record defect. It is not, by itself, suspicion.
+    inputs:
+      min_cad: 1000
+      required_fields:
+        - originator_name
+        - originator_account
+        - originator_address
+        - beneficiary_name
+        - beneficiary_account
+        - beneficiary_address
+        - beneficiary_institution
+    score:
+      base: 40
+
+  - id: AML-TB-001
+    version: "1.0"
+    name: Trade payment diverges from the declared goods value
+    category: trade
+    severity: high
+    evaluator: trade_invoice_discrepancy
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      A payment tagged with trade details has an invoice value that differs
+      from the declared goods value by at least 25 percent, and the invoice
+      is at least CAD 1,000. The pattern is the over- and under-invoicing
+      form of trade-based laundering. It is an indicator, not a finding.
+    inputs:
+      min_invoice_cad: 1000
+      min_discrepancy_ratio: 0.25
+    score:
+      base: 36
+
+  - id: AML-TB-002
+    version: "1.0"
+    name: MSB cash-in followed by payouts to several beneficiaries
+    category: typology
+    severity: high
+    evaluator: msb_third_party_payout
+    dedupe: daily
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      A customer whose business is money services or remittance receives at
+      least CAD 5,000 in cash and, within 24 hours, pays three or more
+      distinct beneficiaries on a non-cash rail. Multiple third-party payouts
+      are an MSB typology indicator.
+    inputs:
+      window_hours: 24
+      min_cash_cad: 5000
+      min_beneficiaries: 3
+    score:
+      base: 44
+
+  - id: AML-TB-003
+    version: "1.0"
+    name: Casino chips purchased and largely redeemed with minimal play
+    category: typology
+    severity: high
+    evaluator: casino_minimal_play
+    effective_from: "2026-01-01T00:00:00"
+    description: >
+      Chips of at least CAD 3,000 are purchased and recorded gaming activity
+      is at most 20 percent of that buy-in, and the value is redeemed to a
+      third party or leaves by wire or virtual currency. Minimal play is a
+      casino typology indicator, not a finding that the chips laundered funds.
+    inputs:
+      min_chips_cad: 3000
+      max_play_ratio: 0.20
+    score:
+      base: 44

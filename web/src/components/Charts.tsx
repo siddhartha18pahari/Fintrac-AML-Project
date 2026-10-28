@@ -1,8 +1,12 @@
-import { data } from "@/lib/snapshot";
+"use client";
+
+import { useState } from "react";
 import { money } from "@/lib/format";
 
-export function VolumeChart() {
-  const series = data.series.slice(-21);
+type Point = { date: string; cash: number; eft: number; virtual_currency: number; total: number };
+
+export function VolumeChart({ series }: { series: Point[] }) {
+  const [active, setActive] = useState<number | null>(null);
   const max = Math.max(...series.map((row) => row.total), 1);
   const width = 720;
   const height = 200;
@@ -23,7 +27,7 @@ export function VolumeChart() {
           const vcH = (row.virtual_currency / max) * innerH;
           const base = padY + innerH;
           return (
-            <g key={row.date}>
+            <g key={row.date} onMouseEnter={() => setActive(index)} onMouseLeave={() => setActive(null)} className="cursor-pointer">
               <rect x={x} y={base - vcH - eftH - cashH} width={barW} height={cashH} fill="#9a5720" rx="1">
                 <title>{`${row.date} cash ${money(row.cash)}`}</title>
               </rect>
@@ -42,6 +46,13 @@ export function VolumeChart() {
           );
         })}
       </svg>
+      {active != null && series[active] ? (
+        <p className="mt-2 text-sm" aria-live="polite">
+          {series[active].date}: virtual currency {money(series[active].virtual_currency)}, cash {money(series[active].cash)}, wires {money(series[active].eft)}.
+        </p>
+      ) : (
+        <p className="mt-2 text-sm text-muted">Hover a day to read the three rails.</p>
+      )}
       <figcaption className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
         <span className="inline-flex items-center gap-1.5"><i className="inline-block h-2.5 w-2.5 bg-[#1d684f]" /> Virtual currency</span>
         <span className="inline-flex items-center gap-1.5"><i className="inline-block h-2.5 w-2.5 bg-[#9a5720]" /> Cash</span>
@@ -51,8 +62,8 @@ export function VolumeChart() {
   );
 }
 
-export function RuleBars() {
-  const rows = data.kpis.rules.slice(0, 8);
+export function RuleBars({ rules }: { rules: { rule_id: string; count: number }[] }) {
+  const rows = rules.slice(0, 8);
   const max = Math.max(...rows.map((row) => row.count), 1);
   return (
     <ul className="space-y-2">
@@ -71,7 +82,7 @@ export function RuleBars() {
   );
 }
 
-export function TierBars() {
+export function TierBars({ tiers, total }: { tiers: Record<string, number>; total: number }) {
   const order = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const;
   const colors: Record<string, string> = {
     CRITICAL: "#8c2f39",
@@ -79,16 +90,16 @@ export function TierBars() {
     MEDIUM: "#c4a15a",
     LOW: "#1d684f",
   };
-  const total = data.customers.length || 1;
+  const population = total || 1;
   return (
     <ul className="space-y-2">
       {order.map((tier) => {
-        const count = data.kpis.tiers[tier] ?? 0;
+        const count = tiers[tier] ?? 0;
         return (
           <li key={tier} className="grid grid-cols-[92px_1fr_32px] items-center gap-2 text-sm">
             <span>{tier[0] + tier.slice(1).toLowerCase()}</span>
             <div className="h-2 rounded-full bg-[#efe6d6]">
-              <div className="h-2 rounded-full" style={{ width: `${(count / total) * 100}%`, background: colors[tier] }} />
+              <div className="h-2 rounded-full" style={{ width: `${(count / population) * 100}%`, background: colors[tier] }} />
             </div>
             <span className="num text-right text-muted">{count}</span>
           </li>

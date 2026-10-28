@@ -14,6 +14,10 @@ export default function ReportsPage() {
         title="Drafts a person can check"
         lede="Each narrative is composed from the case facts. The verifier rejects a number that is not in those facts, and it rejects any sentence that states a crime as fact. Filing is still a human decision."
       />
+      <p className="mb-4 text-sm">
+        <Link href="/filings" className="font-semibold text-info underline">Open the FINTRAC-like drafts</Link>
+        <span className="text-muted"> for STR, LCTR, EFTR and terrorist-property JSON.</span>
+      </p>
       <ul className="grid gap-4">
         {data.reports.map((report) => (
           <li key={report.case_id}>

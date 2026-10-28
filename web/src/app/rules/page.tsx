@@ -5,7 +5,7 @@ import { data } from "@/lib/snapshot";
 
 export const metadata: Metadata = { title: "Rules" };
 
-const ORDER = ["threshold", "structuring", "velocity", "behavioural", "transaction_size", "customer_inconsistency", "network", "counterparty", "third_party", "obfuscation", "geography"];
+const ORDER = ["threshold", "screening", "terrorist_property", "travel_rule", "trade", "typology", "structuring", "velocity", "behavioural", "transaction_size", "customer_inconsistency", "network", "counterparty", "third_party", "obfuscation", "geography"];
 
 export default async function RulesPage({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
   const { all } = await searchParams;

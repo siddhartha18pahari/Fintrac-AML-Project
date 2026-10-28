@@ -122,12 +122,14 @@ The driver text shown to investigators reads:
 
 ## Evaluation
 
-**No precision, recall or PR-AUC is reported, and that is a deliberate refusal.**
+**No precision, recall or PR-AUC of money laundering is reported, and that is a deliberate refusal.**
 
 This deployment has no adjudicated outcome labels. The synthetic dataset carries
-`scenario_type` tags, but scoring the model against those would measure whether
-it rediscovers patterns the generator planted — a circular result that would
-look impressive and mean nothing.
+`scenario_type` tags. The workspace quality page reports recall of those planted
+indicator ids, and it says so. That number measures whether the rule engine
+rediscovered patterns the generator inserted. It is not a model claim about
+laundering, and alerts outside the labels are shown as unlabelled, not as
+false positives.
 
 What is reported instead, on the dashboard:
 
