@@ -4,7 +4,11 @@
 
 tests/
 docs/
-data/
+# Repository-root SQLite directory only. A bare `data/` pattern also matches
+# web/src/data/snapshot.json, which the Next.js build imports. Vercel applies
+# this file before `next build`, so that match fails the production build
+# with "Can't resolve '@/data/snapshot.json'".
+/data/
 *.db
 *.db-wal
 *.db-shm
