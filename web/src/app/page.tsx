@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { HeroField, StatCounter } from "@/components/HeroField";
 import { data } from "@/lib/snapshot";
 import { money } from "@/lib/format";
 
@@ -43,6 +44,9 @@ export default function HomePage() {
   return (
     <div>
       <header className="relative overflow-hidden border-b border-white/10 bg-spruce-deep text-[#f6f3ea]">
+        <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-[#9a7433]/30 blur-3xl" aria-hidden="true" />
+        <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#1d684f]/30 blur-3xl" aria-hidden="true" />
+        <HeroField />
         <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
           <div>
@@ -51,6 +55,9 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-[#c9d8d1] sm:inline">Synthetic book · {data.meta.as_of.slice(0, 10)}</span>
+            <a href="https://fintrac-aml.vercel.app" className="hidden rounded-full border border-white/20 px-3 py-1.5 text-xs font-semibold text-white sm:inline">
+              Live demo
+            </a>
             <Link href="/dashboard" className="rounded-full bg-brass-soft px-4 py-2 text-sm font-semibold text-spruce-deep">
               Open workspace
             </Link>
@@ -75,17 +82,10 @@ export default function HomePage() {
             </div>
           </div>
           <dl className="grid grid-cols-2 gap-3 self-end">
-            {[
-              ["Transactions", counts.transactions],
-              ["Alerts", counts.alerts],
-              ["Cases", counts.cases],
-              ["Customers", counts.customers],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                <dt className="text-xs uppercase tracking-wider text-[#b7c9c0]">{label}</dt>
-                <dd className="num mt-1 font-display text-3xl text-white">{value}</dd>
-              </div>
-            ))}
+            <StatCounter label="Transactions" value={counts.transactions} />
+            <StatCounter label="Alerts" value={counts.alerts} />
+            <StatCounter label="Cases" value={counts.cases} />
+            <StatCounter label="Customers" value={counts.customers} />
           </dl>
         </div>
       </header>
@@ -100,7 +100,7 @@ export default function HomePage() {
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {RAILS.map((rail) => (
-            <article key={rail.code} className="rounded-2xl border border-line bg-card p-5">
+            <article key={rail.code} className="panel glass p-5 transition duration-200 hover:-translate-y-0.5 hover:border-brass">
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="font-display text-2xl text-spruce">{rail.name}</h3>
                 <span className="text-xs font-semibold tracking-wider text-brass">{rail.code}</span>

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Badge, InstrumentTag } from "@/components/Badges";
 import { PageIntro, Shell } from "@/components/Shell";
 import { Timeline } from "@/components/Timeline";
+import { RiskGauge, Sparkline } from "@/components/Viz";
 import { money, when } from "@/lib/format";
 import { alertsForCustomer, anomalyForCustomer, customerById, data, transactionsForCustomer } from "@/lib/snapshot";
 
@@ -74,10 +75,15 @@ export default async function CustomerPage({ params }: { params: Promise<Params>
           ["Behavioural", customer.risk.behavioural, "Open alert composite"],
           ["Residual", customer.risk.residual, "What the queue should feel"],
         ].map(([label, value, note]) => (
-          <article key={String(label)} className="rounded-2xl border border-line bg-card px-4 py-4">
-            <p className="text-xs uppercase tracking-wider text-muted">{label}</p>
-            <p className="num font-display text-4xl text-spruce">{value}</p>
-            <p className="text-sm text-muted">{note}</p>
+          <article key={String(label)} className="panel glass px-4 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted">{label}</p>
+                <p className="num font-display text-4xl text-spruce">{value}</p>
+                <p className="text-sm text-muted">{note}</p>
+              </div>
+              {label === "Residual" ? <RiskGauge score={customer.risk.residual} label="Residual" /> : <Sparkline values={transactionsAll.map((txn) => txn.cad_value).slice(-16)} label="Recent amounts" />}
+            </div>
           </article>
         ))}
       </section>

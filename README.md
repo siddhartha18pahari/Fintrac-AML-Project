@@ -1,5 +1,9 @@
 # FINTRAC Sentinel
 
+[![Live demo](https://img.shields.io/badge/Live%20demo-fintrac--aml.vercel.app-0c241e?style=for-the-badge)](https://fintrac-aml.vercel.app)
+
+**The investigator workspace is live at [fintrac-aml.vercel.app](https://fintrac-aml.vercel.app).** No sign-in, no environment variables. The book is synthetic.
+
 **Explainable AML monitoring and regulatory reporting for virtual-currency transactions.**
 
 `Detect → Investigate → Explain → Report`

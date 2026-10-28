@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { NavLinks } from "@/components/Nav";
 import { SearchButton } from "@/components/CommandPalette";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -7,7 +8,7 @@ import { data } from "@/lib/snapshot";
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
-      <aside className="no-print hidden bg-spruce-deep text-[#e7f0eb] md:flex md:max-h-screen md:flex-col md:justify-between md:overflow-y-auto md:px-4 md:py-6">
+      <aside className="no-print hidden border-r border-white/10 bg-spruce-deep text-[#e7f0eb] shadow-[12px_0_40px_rgba(7,20,16,0.18)] md:flex md:max-h-screen md:flex-col md:justify-between md:overflow-y-auto md:px-4 md:py-6">
         <div>
           <Link href="/" className="block px-3">
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-soft">Sentinel</span>
@@ -35,7 +36,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
           <NavLinks variant="top" />
         </header>
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <Breadcrumbs />
+          {children}
+        </main>
       </div>
     </div>
   );

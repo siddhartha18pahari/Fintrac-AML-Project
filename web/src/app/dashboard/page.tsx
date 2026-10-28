@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/Badges";
 import { RuleBars, TierBars, VolumeChart } from "@/components/Charts";
 import { PageIntro, Shell } from "@/components/Shell";
+import { FundSankey, Sparkline, VolumeHeatmap } from "@/components/Viz";
 import { money } from "@/lib/format";
 import { data } from "@/lib/snapshot";
 
@@ -14,6 +15,16 @@ export default function DashboardPage() {
   const maple = data.customers.find((row) => row.name.includes("Maple"));
   const harbour = data.customers.find((row) => row.name.includes("Harbour"));
   const recent = [...data.alerts].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)).slice(0, 6);
+
+  const flows = { in: { CASH: 0, EFT: 0, VIRTUAL_CURRENCY: 0 }, out: { CASH: 0, EFT: 0, VIRTUAL_CURRENCY: 0 } };
+  for (const txn of data.transactions) {
+    const rail = txn.instrument === "CASH" || txn.instrument === "EFT" ? txn.instrument : "VIRTUAL_CURRENCY";
+    const side = txn.direction === "OUTGOING" ? flows.out : flows.in;
+    side[rail] += txn.cad_value;
+  }
+  const tone = { CASH: "#9a5720", EFT: "#1c4f78", VIRTUAL_CURRENCY: "#1d684f" } as const;
+  const label = { CASH: "Cash", EFT: "Wires", VIRTUAL_CURRENCY: "Virtual" } as const;
+  const spark = data.series.slice(-21).map((row) => row.total);
 
   const cards = [
     ["Alerts", counts.alerts, "Open indicators across the book"],
@@ -49,12 +60,33 @@ export default function DashboardPage() {
       </nav>
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map(([label, value, note]) => (
-          <article key={label} className="rounded-2xl border border-line bg-card px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
-            <p className="num mt-1 font-display text-4xl text-spruce">{value}</p>
-            <p className="mt-1 text-sm text-muted">{note}</p>
+          <article key={label} className="panel glass px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
+                <p className="num mt-1 font-display text-4xl text-spruce">{value}</p>
+                <p className="mt-1 text-sm text-muted">{note}</p>
+              </div>
+              <Sparkline values={spark} label={`${label} against recent volume`} />
+            </div>
           </article>
         ))}
+      </section>
+
+      <section className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+        <article className="panel glass p-5">
+          <h2 className="font-display text-2xl text-spruce">Where value moves</h2>
+          <p className="mb-2 text-sm text-muted">Receipts enter on the left. Payments leave on the right. The centre is the book, not a claim that one dollar became the other.</p>
+          <FundSankey
+            incoming={(["CASH", "EFT", "VIRTUAL_CURRENCY"] as const).map((rail) => ({ label: label[rail], value: flows.in[rail], tone: tone[rail] }))}
+            outgoing={(["CASH", "EFT", "VIRTUAL_CURRENCY"] as const).map((rail) => ({ label: label[rail], value: flows.out[rail], tone: tone[rail] }))}
+          />
+        </article>
+        <article className="panel glass p-5">
+          <h2 className="font-display text-2xl text-spruce">Incoming heat</h2>
+          <p className="mb-4 text-sm text-muted">Each cell is a day. Darker means more value received.</p>
+          <VolumeHeatmap days={data.series.map((row) => ({ date: row.date, total: row.total }))} />
+        </article>
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
