@@ -54,7 +54,8 @@ export function TriageBoard({
   alerts: AlertRow[];
 }) {
   const workspace = useWorkspace(namespace);
-  const [filter, setFilter] = useState<"all" | "breached" | "inside" | "unassigned">("all");
+  const [filter, setFilter] = useState<"all" | "breached" | "inside" | "unassigned" | "approval">("all");
+  const [layout, setLayout] = useState<"table" | "lanes">("lanes");
   const items = useMemo<Item[]>(() => {
     const caseItems: Item[] = cases.map((row) => ({
       key: `case-${row.id}`,
@@ -92,12 +93,19 @@ export function TriageBoard({
   const decorated = items.map((item) => {
     const clock = formatRemaining(item.deadline, asOf);
     const overlay = item.caseId == null ? null : workspace.overlayFor(item.caseId, item.snapshotStatus, item.snapshotDisposition);
-    return { ...item, clock, assignee: overlay?.assignee ?? "Unassigned", status: overlay?.status ?? item.snapshotStatus };
+    return {
+      ...item,
+      clock,
+      assignee: overlay?.assignee ?? "Unassigned",
+      status: overlay?.status ?? item.snapshotStatus,
+      approval: overlay?.approval.status ?? "none",
+    };
   });
   const visible = decorated.filter((item) => {
     if (filter === "breached") return item.clock.breached;
     if (filter === "inside") return !item.clock.breached;
     if (filter === "unassigned") return item.assignee === "Unassigned";
+    if (filter === "approval") return item.approval === "pending";
     return true;
   });
   const breached = decorated.filter((item) => item.clock.breached).length;
@@ -114,6 +122,7 @@ export function TriageBoard({
             ["breached", `Over SLA ${breached}`],
             ["inside", "Inside SLA"],
             ["unassigned", "Unassigned"],
+            ["approval", `Four-eyes ${decorated.filter((item) => item.approval === "pending").length}`],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -126,7 +135,47 @@ export function TriageBoard({
             {label}
           </button>
         ))}
+        <span className="mx-1 hidden h-6 w-px bg-line sm:inline-block" aria-hidden="true" />
+        {(["lanes", "table"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={layout === value}
+            onClick={() => setLayout(value)}
+            className={`rounded-full px-3 py-1.5 text-sm font-semibold ${layout === value ? "bg-brass text-ink" : "border border-line bg-card"}`}
+          >
+            {value === "lanes" ? "Lanes" : "Table"}
+          </button>
+        ))}
       </div>
+      {layout === "lanes" ? (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {["NEW", "TRIAGE", "UNDER_REVIEW", "ESCALATED", "DECISION", "APPROVED"].map((column) => {
+            const lane = visible.filter((item) => item.status === column || (column === "NEW" && item.caseId == null && item.status === "NEW"));
+            return (
+              <section key={column} className="rounded-2xl border border-line bg-card/80 p-3">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{column.replaceAll("_", " ")} · {lane.length}</h2>
+                <ul className="mt-2 space-y-2">
+                  {lane.slice(0, 8).map((item) => (
+                    <li key={item.key} className="rounded-xl border border-line bg-paper/70 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <Link href={item.href} className="text-sm font-semibold hover:underline">{item.label}</Link>
+                        <span className={`num text-xs font-semibold ${item.clock.breached ? "text-critical" : "text-low"}`}>{item.clock.text}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted">{item.subject}</p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <Badge value={item.tier} />
+                        {item.approval === "pending" ? <Badge value="Four-eyes" tone="HIGH" /> : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      ) : null}
+      {layout === "table" ? (
       <div className="overflow-x-auto rounded-2xl border border-line bg-card">
         <table className="min-w-full text-left text-sm">
           <caption className="sr-only">Triage queue with SLA timers</caption>
@@ -155,12 +204,16 @@ export function TriageBoard({
                 </td>
                 <td className="px-4 py-3"><Badge value={item.tier} /></td>
                 <td className="px-4 py-3">{item.assignee}</td>
-                <td className="px-4 py-3">{item.status.replaceAll("_", " ")}</td>
+                <td className="px-4 py-3">
+                  {item.status.replaceAll("_", " ")}
+                  {item.approval === "pending" ? <span className="ml-2 text-xs font-semibold text-high">four-eyes</span> : null}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      ) : null}
       {visible.length === 0 ? <p className="mt-3 text-sm text-muted">Nothing in this filter.</p> : null}
     </div>
   );

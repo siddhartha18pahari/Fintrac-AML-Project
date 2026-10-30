@@ -7,3 +7,10 @@
 pytest>=8.0
 httpx>=0.27
 pyflakes>=3.0
+
+# Investigator copilot. The studio chat imports these when they are installed
+# and falls back to the same tools without a model when they are not, or when
+# OPENAI_API_KEY / AI_GATEWAY_API_KEY is unset. Kept out of requirements.txt
+# so the serverless function can stay under the size cap.
+langchain-core>=0.3
+langchain-openai>=0.3

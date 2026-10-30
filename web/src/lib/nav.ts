@@ -14,4 +14,5 @@ export const NAV = [
   { href: "/rules", label: "Rules", key: "u", group: "Reporting" },
   { href: "/simulator", label: "Simulator", key: "s", group: "Reporting" },
   { href: "/performance", label: "Quality", key: "p", group: "Reporting" },
+  { href: "/statistics", label: "Statistics", key: "y", group: "Reporting" },
 ];

@@ -49,6 +49,28 @@ KIND_SIZE = {
     "wallet": 8,
 }
 
+KIND_SHAPE = {
+    "customer": "dot",
+    "case": "square",
+    "typology": "star",
+    "rule": "diamond",
+    "beneficiary": "triangle",
+    "third_party": "triangleDown",
+    "device": "hexagon",
+    "ip": "database",
+    "alert": "box",
+    "wallet": "dot",
+}
+
+RELATION_COLOR = {
+    "business": "rgba(226,196,138,0.7)",
+    "triggered": "rgba(224,107,118,0.55)",
+    "owns": "rgba(61,190,160,0.35)",
+    "controls": "rgba(61,190,160,0.35)",
+    "beneficiary": "rgba(227,154,85,0.55)",
+    "device": "rgba(126,182,217,0.45)",
+}
+
 
 def risk_color(risk: int | None) -> str:
     if risk is None:
@@ -142,19 +164,23 @@ def build(solver: str, snapshot: Path, out: Path) -> None:
         sanctioned = "sanction" in blob
         color = risk_color(risk_value)
         # Group styling drops an explicit colour in PyVis, so set colour after the node exists.
+        hot = (risk_value or 0) >= 50
         net.add_node(
             node["id"],
             label=label,
             title=tooltip(node),
             size=node_size(kind, risk_value),
-            borderWidth=3 if sanctioned else 1,
+            shape=KIND_SHAPE.get(kind, "dot"),
+            borderWidth=8 if (risk_value or 0) >= 75 else 4 if hot or sanctioned else 1,
             mass=1.6 if kind == "customer" else 1,
         )
         stored = net.node_map[node["id"]]
         stored["group"] = kind
+        stored["shape"] = KIND_SHAPE.get(kind, "dot")
+        stored["shadow"] = {"enabled": True, "color": color, "size": 22 if hot else 8, "x": 0, "y": 0}
         stored["color"] = {
             "background": color,
-            "border": "#e2c48a" if sanctioned else "#0c1612",
+            "border": "#fff7e8" if hot or sanctioned else "#0c1612",
             "highlight": {"background": "#fff7e8", "border": "#e2c48a"},
         }
         stored["font"] = {
@@ -172,8 +198,9 @@ def build(solver: str, snapshot: Path, out: Path) -> None:
             edge["source"],
             edge["target"],
             title=html.escape(relation),
-            color={"color": "rgba(167,214,196,0.32)", "highlight": "#e2c48a"},
+            color={"color": RELATION_COLOR.get(relation, "rgba(167,214,196,0.32)"), "highlight": "#e2c48a"},
             smooth={"type": "continuous"},
+            width=2 if relation in {"triggered", "business"} else 1,
         )
         kept += 1
 
@@ -232,13 +259,14 @@ def seal(path: Path, disclaimer: str, solver: str, node_count: int, edge_count: 
 <div id="sentinel-bar">
   <div>
     <strong>Entity graph</strong>
-    <p>{html.escape(disclaimer)} {node_count} nodes, {edge_count} edges. Physics: {solver_label}. Grouped by entity type. Click a node to light its neighbours.</p>
+    <p>{html.escape(disclaimer)} {node_count} nodes, {edge_count} edges. Physics: {solver_label}. Shape is entity type, halo is risk. Click a node to light its neighbours.</p>
   </div>
-  <div class="legend" aria-label="Risk legend">
+  <div class="legend" aria-label="Risk and shape legend">
     <span><i class="swatch" style="background:#3dbea0"></i>Under 25</span>
     <span><i class="swatch" style="background:#e2c48a"></i>25–49</span>
     <span><i class="swatch" style="background:#e39a55"></i>50–74</span>
     <span><i class="swatch" style="background:#e06b76"></i>75 and above</span>
+    <span>dot customer · star typology · diamond rule · box alert</span>
   </div>
 </div>
 """
