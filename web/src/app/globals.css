@@ -527,6 +527,17 @@ html.dark .skeleton::after {
   animation: drift 2.4s ease-in-out infinite;
 }
 
+.flow-arc {
+  stroke-dasharray: 7 9;
+  animation: flow-dash 1.6s linear infinite;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

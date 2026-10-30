@@ -24,19 +24,26 @@ class GraphRequest(BaseModel):
 
 class SimulateRequest(BaseModel):
     seed: int = Field(7, ge=1, le=999999)
-    days: int = Field(21, ge=7, le=45)
-    customers: int = Field(12, ge=6, le=24)
+    days: int = Field(21, ge=7, le=60)
+    customers: int = Field(12, ge=6, le=48)
     mu: float = Field(6.2, ge=4, le=9)
     sigma: float = Field(0.85, ge=0.2, le=1.6)
     seasonality: float = Field(0.35, ge=0, le=1)
     night_share: float = Field(0.12, ge=0, le=0.6)
     fx_vol: float = Field(0.02, ge=0, le=0.15)
+    intensity: float = Field(0.55, ge=0, le=1)
+    camouflage: float = Field(0, ge=0, le=1)
+    focus_city: str = ""
+    preset: str = ""
     structuring: bool = True
     layering: bool = True
     mules: bool = True
     trade: bool = True
     offramp: bool = True
     round_trip: bool = True
+    funnel: bool = False
+    rapid: bool = False
+    professional: bool = False
     payroll: bool = True
     rent: bool = True
 

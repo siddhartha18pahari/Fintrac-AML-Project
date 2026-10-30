@@ -91,6 +91,76 @@ def test_turning_typologies_off_removes_their_hits():
     assert "AML-FI-003" not in rules
 
 
+def test_customers_carry_kyc_and_the_rails_a_report_would_name():
+    book = simulate(_controls(payroll=True, rent=True))
+    profile = book["customers"][0]
+    assert profile["occupation"]
+    assert profile["income_band"]
+    assert profile["account_number"].startswith("700")
+    assert profile["province"]
+    sample = book["transactions"][0]
+    for field in ("conductor", "method", "disposition", "account_type", "purpose", "counterparty"):
+        assert field in sample
+    channels = {row["channel"] for row in book["transactions"]}
+    assert {"E_TRANSFER", "CARD", "EFT"} <= channels
+    assert book["summary"]["window_start"] == "2026-02-02"
+    assert "merchants" in book["directory"]
+
+
+def test_camouflage_plants_a_benign_lookalike_the_cash_rule_can_flag():
+    book = simulate(_controls(camouflage=0.35))
+    lookalikes = [row for row in book["transactions"] if row["typology"] == "lookalike"]
+    assert lookalikes
+    assert all(row["ground_truth"] == "benign" for row in lookalikes)
+    assert any(hit["rule_id"] == "AML-FI-003" for hit in book["hits"])
+    assert book["evaluation"]["fp"] > 0
+    assert book["evaluation"]["precision"] < 1
+
+
+def test_a_spread_out_structuring_plant_can_be_missed():
+    book = simulate(_controls(structuring=True, camouflage=0.9, intensity=0.2))
+    stats = {item["typology"]: item for item in book["evaluation"]["by_typology"]}
+    assert stats["structuring"]["plants"] > stats["structuring"]["detected"]
+    assert book["evaluation"]["fn"] > 0
+    assert book["evaluation"]["median_hours_to_detect"] is not None
+
+
+def test_python_book_matches_the_typescript_engine():
+    import subprocess
+    from pathlib import Path
+
+    from app.services.bank_engine import fingerprint
+
+    root = Path(__file__).resolve().parents[1]
+    completed = subprocess.run(
+        ["npx", "--yes", "tsx", "web/scripts/sim-fingerprint.ts"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=90,
+    )
+    book = simulate(
+        _controls(
+            structuring=True,
+            layering=True,
+            mules=True,
+            trade=True,
+            offramp=True,
+            round_trip=True,
+            funnel=True,
+            rapid=True,
+            professional=True,
+            payroll=True,
+            rent=True,
+            camouflage=0,
+            intensity=0.55,
+        )
+    )
+    assert fingerprint(book) == completed.stdout.strip()
+    assert book["evaluation"]["by_typology"]
+
+
 def test_evaluate_flags_a_single_large_cash_receipt():
     hits = evaluate(
         [
