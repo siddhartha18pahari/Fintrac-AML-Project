@@ -1,0 +1,17 @@
+export const CHART = {
+  vc: "#1d684f",
+  vcSoft: "#8ef0d2",
+  cash: "#9a5720",
+  cashSoft: "#f0c09a",
+  eft: "#1c4f78",
+  eftSoft: "#b9d4ee",
+  critical: "#8c2f39",
+  criticalSoft: "#f0b4bc",
+  high: "#9a5720",
+  highSoft: "#f0c09a",
+  medium: "#a6842e",
+  mediumSoft: "#ead28a",
+  low: "#1d684f",
+  lowSoft: "#9ad7c4",
+  grid: "rgba(92, 103, 95, 0.28)",
+} as const;

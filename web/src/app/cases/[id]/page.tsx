@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/Badges";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
 import { PageIntro, Shell } from "@/components/Shell";
+import { Timeline } from "@/components/Timeline";
 import { when } from "@/lib/format";
 import { data } from "@/lib/snapshot";
 
@@ -33,7 +34,7 @@ export default async function CasePage({ params }: { params: Promise<Params> }) 
       />
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <Badge value={row.risk_tier} />
-        <Badge value={row.priority} tone="INFO" />
+        <Badge value={row.priority} tone={row.priority === "URGENT" ? "CRITICAL" : "INFO"} />
         {row.lvctr_required ? <Badge value="LVCTR" tone="REPORTING" /> : null}
         {row.str_candidate ? <Badge value="STR review" tone="HIGH" /> : null}
         <Link href={`/customers/${row.customer_id}`} className="text-sm text-info underline">Customer 360</Link>
@@ -41,7 +42,7 @@ export default async function CasePage({ params }: { params: Promise<Params> }) 
         {filing ? <Link href={`/filings/${filing.id}`} className="text-sm text-info underline">Draft filing</Link> : null}
       </div>
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <h2 className="font-display text-2xl text-spruce">Why it is open</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between gap-3"><dt className="text-muted">Score</dt><dd className="num">{row.risk_score}</dd></div>
@@ -68,8 +69,22 @@ export default async function CasePage({ params }: { params: Promise<Params> }) 
               </li>
             ))}
           </ul>
+          <h3 className="mb-3 mt-6 font-display text-xl text-spruce">What happened</h3>
+          <Timeline
+            events={[
+              { at: row.opened_at, kind: "case", title: "Case opened in the detection run", detail: row.reference },
+              ...alerts.map((alert) => ({
+                at: alert.occurred_at,
+                kind: alert.severity,
+                title: alert.title,
+                detail: alert.rule_id,
+                href: `/alerts/${alert.id}`,
+              })),
+              ...(row.due_at ? [{ at: row.due_at, kind: "due", title: "Filing clock", detail: "Due date carried on the case." }] : []),
+            ]}
+          />
         </article>
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <h2 className="font-display text-2xl text-spruce">Working file</h2>
           <div className="mt-3">
             <CaseWorkspace namespace={namespace} caseId={row.id} status={row.status} disposition={row.disposition} />

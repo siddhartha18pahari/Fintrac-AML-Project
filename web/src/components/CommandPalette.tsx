@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -62,15 +63,19 @@ export function CommandPalette({ entries }: { entries: CommandEntry[] }) {
     router.push(entry.href);
   }
 
+  const reduce = useReducedMotion() === true;
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-[#071410]/70 p-4 pt-[12vh] backdrop-blur-md" role="presentation" onMouseDown={() => setOpen(false)}>
-      <div
+      <motion.div
         role="dialog"
         aria-modal="true"
         aria-labelledby="command-title"
-        className="rise w-full max-w-xl overflow-hidden rounded-3xl border border-white/10 bg-[#10211c]/95 text-[#e7f0ec] shadow-[0_30px_80px_rgba(0,0,0,0.45)]"
+        initial={reduce ? false : { opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-xl overflow-hidden rounded-3xl border border-white/10 bg-[#10211c]/95 text-[#e7f0ec] shadow-[0_30px_80px_rgba(0,0,0,0.45)]"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2 id="command-title" className="sr-only">Command palette</h2>
@@ -126,7 +131,7 @@ export function CommandPalette({ entries }: { entries: CommandEntry[] }) {
           <span>↑↓ to move · Enter to open</span>
           <span>Esc to close · {shortcut}</span>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -135,7 +140,7 @@ export function openCommandPalette() {
   window.dispatchEvent(new Event("sentinel-command"));
 }
 
-export function SearchButton({ className = "" }: { className?: string }) {
+export function SearchButton({ className = "", label = "Search the book" }: { className?: string; label?: string }) {
   const [shortcut, setShortcut] = useState("Ctrl K");
   useEffect(() => {
     const mac = /Mac|iPhone|iPad/.test(navigator.platform);
@@ -147,7 +152,7 @@ export function SearchButton({ className = "" }: { className?: string }) {
       onClick={() => openCommandPalette()}
       className={className}
     >
-      Search the book
+      <span className="truncate">{label}</span>
       <kbd className="rounded-md border border-white/20 px-1.5 py-0.5 font-mono text-[10px]">{shortcut}</kbd>
     </button>
   );
