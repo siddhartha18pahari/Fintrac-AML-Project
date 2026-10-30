@@ -1,0 +1,948 @@
+{
+  "holidays": [
+    "2026-01-01",
+    "2026-02-16",
+    "2026-04-03",
+    "2026-04-06",
+    "2026-05-18",
+    "2026-07-01",
+    "2026-09-07",
+    "2026-10-12",
+    "2026-11-11",
+    "2026-12-25",
+    "2026-12-26"
+  ],
+  "city": {
+    "Toronto": {
+      "lat": 43.65,
+      "lon": -79.38,
+      "postal": "M5V"
+    },
+    "Ottawa": {
+      "lat": 45.42,
+      "lon": -75.7,
+      "postal": "K1P"
+    },
+    "Montreal": {
+      "lat": 45.5,
+      "lon": -73.57,
+      "postal": "H2Y"
+    },
+    "Quebec City": {
+      "lat": 46.81,
+      "lon": -71.21,
+      "postal": "G1R"
+    },
+    "Mississauga": {
+      "lat": 43.59,
+      "lon": -79.64,
+      "postal": "L5B"
+    },
+    "Calgary": {
+      "lat": 51.05,
+      "lon": -114.07,
+      "postal": "T2P"
+    },
+    "Vancouver": {
+      "lat": 49.28,
+      "lon": -123.12,
+      "postal": "V6B"
+    },
+    "Winnipeg": {
+      "lat": 49.9,
+      "lon": -97.14,
+      "postal": "R3C"
+    },
+    "Halifax": {
+      "lat": 44.65,
+      "lon": -63.57,
+      "postal": "B3J"
+    },
+    "Edmonton": {
+      "lat": 53.55,
+      "lon": -113.49,
+      "postal": "T5J"
+    },
+    "Brampton": {
+      "lat": 43.73,
+      "lon": -79.76,
+      "postal": "L6Y"
+    },
+    "Laval": {
+      "lat": 45.61,
+      "lon": -73.71,
+      "postal": "H7N"
+    },
+    "Richmond": {
+      "lat": 49.17,
+      "lon": -123.14,
+      "postal": "V6Y"
+    },
+    "Waterloo": {
+      "lat": 43.46,
+      "lon": -80.52,
+      "postal": "N2L"
+    },
+    "Sherbrooke": {
+      "lat": 45.4,
+      "lon": -71.89,
+      "postal": "J1H"
+    },
+    "Hamilton": {
+      "lat": 43.26,
+      "lon": -79.87,
+      "postal": "L8P"
+    },
+    "Surrey": {
+      "lat": 49.19,
+      "lon": -122.85,
+      "postal": "V3T"
+    },
+    "London": {
+      "lat": 42.98,
+      "lon": -81.25,
+      "postal": "N6A"
+    },
+    "Victoria": {
+      "lat": 48.43,
+      "lon": -123.37,
+      "postal": "V8W"
+    }
+  },
+  "country": {
+    "CA": {
+      "name": "Canada",
+      "lat": 56.1,
+      "lon": -106.3
+    },
+    "US": {
+      "name": "United States",
+      "lat": 39.8,
+      "lon": -98.6
+    },
+    "GB": {
+      "name": "United Kingdom",
+      "lat": 54,
+      "lon": -2.5
+    },
+    "HK": {
+      "name": "Hong Kong",
+      "lat": 22.32,
+      "lon": 114.17
+    },
+    "CN": {
+      "name": "China",
+      "lat": 35.9,
+      "lon": 104.2
+    },
+    "AE": {
+      "name": "United Arab Emirates",
+      "lat": 24.5,
+      "lon": 54.4
+    },
+    "MX": {
+      "name": "Mexico",
+      "lat": 23.6,
+      "lon": -102.5
+    },
+    "LT": {
+      "name": "Lithuania",
+      "lat": 55.2,
+      "lon": 23.9
+    },
+    "AU": {
+      "name": "Australia",
+      "lat": -25.3,
+      "lon": 133.8
+    },
+    "NG": {
+      "name": "Nigeria",
+      "lat": 9.1,
+      "lon": 8.7
+    },
+    "PA": {
+      "name": "Panama",
+      "lat": 8.5,
+      "lon": -80.8
+    }
+  },
+  "personas": [
+    {
+      "name": "Maya Singh",
+      "persona": "salaried",
+      "city": "Toronto",
+      "province": "ON",
+      "activity": 1.15,
+      "cash": 0.05,
+      "occupation": "Software developer",
+      "employer": "Northline Software",
+      "incomeBand": "70-95k",
+      "accountType": "chequing",
+      "dob": "1992-04-18"
+    },
+    {
+      "name": "Owen Blake",
+      "persona": "salaried",
+      "city": "Ottawa",
+      "province": "ON",
+      "activity": 0.8,
+      "cash": 0.04,
+      "occupation": "Policy analyst",
+      "employer": "Federal department",
+      "incomeBand": "75-100k",
+      "accountType": "chequing",
+      "dob": "1986-11-02"
+    },
+    {
+      "name": "Hana Park",
+      "persona": "student",
+      "city": "Montreal",
+      "province": "QC",
+      "activity": 0.45,
+      "cash": 0.08,
+      "occupation": "Student",
+      "employer": "University",
+      "incomeBand": "12-28k",
+      "accountType": "student_chequing",
+      "dob": "2003-06-21"
+    },
+    {
+      "name": "Louis Bergeron",
+      "persona": "retiree",
+      "city": "Quebec City",
+      "province": "QC",
+      "activity": 0.35,
+      "cash": 0.12,
+      "occupation": "Retired teacher",
+      "employer": "Pension",
+      "incomeBand": "40-60k",
+      "accountType": "savings",
+      "dob": "1952-01-30"
+    },
+    {
+      "name": "Priya Nair",
+      "persona": "small_business",
+      "city": "Mississauga",
+      "province": "ON",
+      "activity": 1.55,
+      "cash": 0.2,
+      "occupation": "Retail owner",
+      "employer": "Nair Provisions",
+      "incomeBand": "90-140k",
+      "accountType": "business_operating",
+      "dob": "1984-09-12"
+    },
+    {
+      "name": "Noah Campbell",
+      "persona": "small_business",
+      "city": "Calgary",
+      "province": "AB",
+      "activity": 1.25,
+      "cash": 0.1,
+      "occupation": "Contractor",
+      "employer": "Campbell Siteworks",
+      "incomeBand": "80-130k",
+      "accountType": "business_operating",
+      "dob": "1981-03-09"
+    },
+    {
+      "name": "Amira Haddad",
+      "persona": "importer",
+      "city": "Vancouver",
+      "province": "BC",
+      "activity": 0.7,
+      "cash": 0.04,
+      "occupation": "Import manager",
+      "employer": "Cedar Import Co",
+      "incomeBand": "110-180k",
+      "accountType": "commercial",
+      "dob": "1979-07-25"
+    },
+    {
+      "name": "Evan Cho",
+      "persona": "crypto_native",
+      "city": "Vancouver",
+      "province": "BC",
+      "activity": 1.7,
+      "cash": 0.02,
+      "occupation": "Freelance developer",
+      "employer": "Self-employed",
+      "incomeBand": "60-110k",
+      "accountType": "chequing",
+      "dob": "1995-12-01"
+    },
+    {
+      "name": "Sofia Rossi",
+      "persona": "crypto_native",
+      "city": "Toronto",
+      "province": "ON",
+      "activity": 1.35,
+      "cash": 0.03,
+      "occupation": "Product designer",
+      "employer": "Self-employed",
+      "incomeBand": "55-100k",
+      "accountType": "chequing",
+      "dob": "1993-05-14"
+    },
+    {
+      "name": "Jonah Adeyemi",
+      "persona": "msb_agent",
+      "city": "Winnipeg",
+      "province": "MB",
+      "activity": 1.4,
+      "cash": 0.34,
+      "occupation": "MSB agent",
+      "employer": "Harbour Counter",
+      "incomeBand": "45-70k",
+      "accountType": "trust",
+      "dob": "1988-08-19"
+    },
+    {
+      "name": "Claire Beaulieu",
+      "persona": "salaried",
+      "city": "Halifax",
+      "province": "NS",
+      "activity": 0.9,
+      "cash": 0.06,
+      "occupation": "Nurse",
+      "employer": "Regional hospital",
+      "incomeBand": "70-95k",
+      "accountType": "chequing",
+      "dob": "1990-02-11"
+    },
+    {
+      "name": "Mateo Alvarez",
+      "persona": "mule",
+      "city": "Edmonton",
+      "province": "AB",
+      "activity": 0.4,
+      "cash": 0.12,
+      "occupation": "Warehouse associate",
+      "employer": "Shift agency",
+      "incomeBand": "32-48k",
+      "accountType": "chequing",
+      "dob": "1999-10-05"
+    },
+    {
+      "name": "Ravi Desai",
+      "persona": "salaried",
+      "city": "Brampton",
+      "province": "ON",
+      "activity": 1,
+      "cash": 0.05,
+      "occupation": "Accountant",
+      "employer": "Desai & Co",
+      "incomeBand": "80-110k",
+      "accountType": "chequing",
+      "dob": "1987-04-22"
+    },
+    {
+      "name": "Elise Moreau",
+      "persona": "small_business",
+      "city": "Laval",
+      "province": "QC",
+      "activity": 1.1,
+      "cash": 0.16,
+      "occupation": "Restaurant owner",
+      "employer": "Rue Laval Bistro",
+      "incomeBand": "60-100k",
+      "accountType": "business_operating",
+      "dob": "1983-12-08"
+    },
+    {
+      "name": "Hassan Karim",
+      "persona": "importer",
+      "city": "Toronto",
+      "province": "ON",
+      "activity": 0.6,
+      "cash": 0.05,
+      "occupation": "Wholesale buyer",
+      "employer": "Karim Trading",
+      "incomeBand": "100-160k",
+      "accountType": "commercial",
+      "dob": "1976-06-17"
+    },
+    {
+      "name": "Nina Volkova",
+      "persona": "crypto_native",
+      "city": "Calgary",
+      "province": "AB",
+      "activity": 1.2,
+      "cash": 0.02,
+      "occupation": "Analyst",
+      "employer": "Self-employed",
+      "incomeBand": "50-90k",
+      "accountType": "chequing",
+      "dob": "1996-09-03"
+    },
+    {
+      "name": "Patrick Leung",
+      "persona": "salaried",
+      "city": "Richmond",
+      "province": "BC",
+      "activity": 0.95,
+      "cash": 0.04,
+      "occupation": "Pharmacist",
+      "employer": "Coastal Pharmacy",
+      "incomeBand": "90-120k",
+      "accountType": "chequing",
+      "dob": "1985-01-28"
+    },
+    {
+      "name": "Aisha Rahman",
+      "persona": "student",
+      "city": "Waterloo",
+      "province": "ON",
+      "activity": 0.4,
+      "cash": 0.07,
+      "occupation": "Student",
+      "employer": "University",
+      "incomeBand": "10-24k",
+      "accountType": "student_chequing",
+      "dob": "2004-03-15"
+    },
+    {
+      "name": "Hugo Tremblay",
+      "persona": "retiree",
+      "city": "Sherbrooke",
+      "province": "QC",
+      "activity": 0.3,
+      "cash": 0.1,
+      "occupation": "Retired",
+      "employer": "Pension",
+      "incomeBand": "35-55k",
+      "accountType": "savings",
+      "dob": "1949-11-23"
+    },
+    {
+      "name": "Imani Brooks",
+      "persona": "msb_agent",
+      "city": "Hamilton",
+      "province": "ON",
+      "activity": 1.3,
+      "cash": 0.28,
+      "occupation": "Branch supervisor",
+      "employer": "North Wharf MSB",
+      "incomeBand": "55-80k",
+      "accountType": "trust",
+      "dob": "1991-07-07"
+    },
+    {
+      "name": "Leo Martel",
+      "persona": "mule",
+      "city": "Surrey",
+      "province": "BC",
+      "activity": 0.35,
+      "cash": 0.1,
+      "occupation": "Delivery driver",
+      "employer": "Contract routes",
+      "incomeBand": "30-46k",
+      "accountType": "chequing",
+      "dob": "2000-02-02"
+    },
+    {
+      "name": "Chloe Nguyen",
+      "persona": "small_business",
+      "city": "Ottawa",
+      "province": "ON",
+      "activity": 1.05,
+      "cash": 0.14,
+      "occupation": "Boutique owner",
+      "employer": "Nguyen Studio",
+      "incomeBand": "50-90k",
+      "accountType": "business_operating",
+      "dob": "1994-08-29"
+    },
+    {
+      "name": "Samir Haddad",
+      "persona": "salaried",
+      "city": "London",
+      "province": "ON",
+      "activity": 0.85,
+      "cash": 0.05,
+      "occupation": "Teacher",
+      "employer": "School board",
+      "incomeBand": "65-90k",
+      "accountType": "chequing",
+      "dob": "1989-05-19"
+    },
+    {
+      "name": "Freya Olsen",
+      "persona": "crypto_native",
+      "city": "Victoria",
+      "province": "BC",
+      "activity": 1.1,
+      "cash": 0.02,
+      "occupation": "Researcher",
+      "employer": "Self-employed",
+      "incomeBand": "45-80k",
+      "accountType": "chequing",
+      "dob": "1997-01-11"
+    },
+    {
+      "name": "Lakeshore Imports Ltd",
+      "persona": "importer",
+      "city": "Toronto",
+      "province": "ON",
+      "activity": 0.85,
+      "cash": 0.03,
+      "occupation": "Wholesale trade",
+      "employer": "Lakeshore Imports Ltd",
+      "incomeBand": "1-3M revenue",
+      "accountType": "commercial",
+      "dob": "2014-04-01"
+    },
+    {
+      "name": "Prairie Grain Co",
+      "persona": "small_business",
+      "city": "Winnipeg",
+      "province": "MB",
+      "activity": 0.7,
+      "cash": 0.08,
+      "occupation": "Agricultural wholesale",
+      "employer": "Prairie Grain Co",
+      "incomeBand": "0.5-2M revenue",
+      "accountType": "business_operating",
+      "dob": "2008-09-15"
+    },
+    {
+      "name": "Canal Street Goods",
+      "persona": "small_business",
+      "city": "Montreal",
+      "province": "QC",
+      "activity": 0.95,
+      "cash": 0.18,
+      "occupation": "Retail",
+      "employer": "Canal Street Goods",
+      "incomeBand": "0.4-1.2M revenue",
+      "accountType": "business_operating",
+      "dob": "2016-02-20"
+    },
+    {
+      "name": "Harbour & Pine Consulting",
+      "persona": "salaried",
+      "city": "Calgary",
+      "province": "AB",
+      "activity": 0.6,
+      "cash": 0.02,
+      "occupation": "Professional services",
+      "employer": "Harbour & Pine Consulting",
+      "incomeBand": "0.8-1.5M revenue",
+      "accountType": "commercial",
+      "dob": "2012-11-08"
+    }
+  ],
+  "merchants": [
+    {
+      "name": "Loblaw Market",
+      "mcc": "5411",
+      "city": "Toronto",
+      "category": "Grocery"
+    },
+    {
+      "name": "King West Provisions",
+      "mcc": "5812",
+      "city": "Toronto",
+      "category": "Restaurant"
+    },
+    {
+      "name": "Petro-Can Yonge",
+      "mcc": "5541",
+      "city": "Toronto",
+      "category": "Fuel"
+    },
+    {
+      "name": "Shoppers Queen",
+      "mcc": "5912",
+      "city": "Toronto",
+      "category": "Pharmacy"
+    },
+    {
+      "name": "Best Buy Metrotown",
+      "mcc": "5732",
+      "city": "Vancouver",
+      "category": "Electronics"
+    },
+    {
+      "name": "STM Fare",
+      "mcc": "4111",
+      "city": "Montreal",
+      "category": "Transit"
+    },
+    {
+      "name": "Fairmont Front",
+      "mcc": "7011",
+      "city": "Toronto",
+      "category": "Hotel"
+    },
+    {
+      "name": "Canadian Tire",
+      "mcc": "5251",
+      "city": "Calgary",
+      "category": "Hardware"
+    },
+    {
+      "name": "Tim Hortons",
+      "mcc": "5814",
+      "city": "Ottawa",
+      "category": "QSR"
+    },
+    {
+      "name": "Air Canada",
+      "mcc": "4511",
+      "city": "Montreal",
+      "category": "Airline"
+    },
+    {
+      "name": "Rogers",
+      "mcc": "4814",
+      "city": "Toronto",
+      "category": "Telecom"
+    },
+    {
+      "name": "IKEA North York",
+      "mcc": "5712",
+      "city": "Toronto",
+      "category": "Home"
+    }
+  ],
+  "correspondents": [
+    {
+      "name": "First Hudson NY",
+      "country": "US",
+      "city": "New York",
+      "lat": 40.71,
+      "lon": -74.01
+    },
+    {
+      "name": "Thames Correspondent",
+      "country": "GB",
+      "city": "London",
+      "lat": 51.51,
+      "lon": -0.13
+    },
+    {
+      "name": "Harbour Trading Bank",
+      "country": "HK",
+      "city": "Hong Kong",
+      "lat": 22.32,
+      "lon": 114.17
+    },
+    {
+      "name": "Pearl River Clearing",
+      "country": "CN",
+      "city": "Shenzhen",
+      "lat": 22.54,
+      "lon": 114.06
+    },
+    {
+      "name": "Gulf Clearing",
+      "country": "AE",
+      "city": "Dubai",
+      "lat": 25.2,
+      "lon": 55.27
+    },
+    {
+      "name": "Lago Payments",
+      "country": "MX",
+      "city": "Mexico City",
+      "lat": 19.43,
+      "lon": -99.13
+    },
+    {
+      "name": "Baltic Bridge",
+      "country": "LT",
+      "city": "Vilnius",
+      "lat": 54.69,
+      "lon": 25.28
+    },
+    {
+      "name": "Pacific Remit",
+      "country": "AU",
+      "city": "Sydney",
+      "lat": -33.87,
+      "lon": 151.21
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "Maple Exchange",
+      "country": "CA",
+      "city": "Toronto"
+    },
+    {
+      "name": "Harbour VASP",
+      "country": "CA",
+      "city": "Vancouver"
+    },
+    {
+      "name": "North Sea Digital",
+      "country": "LT",
+      "city": "Vilnius"
+    }
+  ],
+  "baseRates": {
+    "CAD": 1,
+    "BTC": 118400,
+    "ETH": 4280,
+    "USDT": 1.37,
+    "SOL": 186,
+    "LTC": 112
+  },
+  "vcAssets": [
+    "BTC",
+    "ETH",
+    "USDT",
+    "SOL",
+    "LTC"
+  ],
+  "vcWeights": [
+    34,
+    22,
+    24,
+    12,
+    8
+  ],
+  "mix": {
+    "salaried": [
+      [
+        "CARD",
+        42
+      ],
+      [
+        "E_TRANSFER",
+        22
+      ],
+      [
+        "EFT",
+        16
+      ],
+      [
+        "ATM",
+        8
+      ],
+      [
+        "CASH",
+        4
+      ],
+      [
+        "WIRE",
+        4
+      ],
+      [
+        "VIRTUAL_CURRENCY",
+        4
+      ]
+    ],
+    "student": [
+      [
+        "CARD",
+        40
+      ],
+      [
+        "E_TRANSFER",
+        28
+      ],
+      [
+        "CASH",
+        10
+      ],
+      [
+        "ATM",
+        8
+      ],
+      [
+        "VIRTUAL_CURRENCY",
+        8
+      ],
+      [
+        "EFT",
+        4
+      ],
+      [
+        "WIRE",
+        2
+      ]
+    ],
+    "retiree": [
+      [
+        "EFT",
+        34
+      ],
+      [
+        "CARD",
+        28
+      ],
+      [
+        "CASH",
+        14
+      ],
+      [
+        "ATM",
+        10
+      ],
+      [
+        "E_TRANSFER",
+        10
+      ],
+      [
+        "WIRE",
+        3
+      ],
+      [
+        "VIRTUAL_CURRENCY",
+        1
+      ]
+    ],
+    "small_business": [
+      [
+        "EFT",
+        28
+      ],
+      [
+        "CARD",
+        22
+      ],
+      [
+        "CASH",
+        16
+      ],
+      [
+        "E_TRANSFER",
+        16
+      ],
+      [
+        "WIRE",
+        12
+      ],
+      [
+        "ATM",
+        4
+      ],
+      [
+        "VIRTUAL_CURRENCY",
+        2
+      ]
+    ],
+    "importer": [
+      [
+        "WIRE",
+        34
+      ],
+      [
+        "EFT",
+        28
+      ],
+      [
+        "CARD",
+        14
+      ],
+      [
+        "E_TRANSFER",
+        10
+      ],
+      [
+        "VIRTUAL_CURRENCY",
+        6
+      ],
+      [
+        "CASH",
+        4
+      ],
+      [
+        "ATM",
+        4
+      ]
+    ],
+    "crypto_native": [
+      [
+        "VIRTUAL_CURRENCY",
+        44
+      ],
+      [
+        "E_TRANSFER",
+        18
+      ],
+      [
+        "CARD",
+        14
+      ],
+      [
+        "EFT",
+        12
+      ],
+      [
+        "WIRE",
+        6
+      ],
+      [
+        "CASH",
+        3
+      ],
+      [
+        "ATM",
+        3
+      ]
+    ],
+    "msb_agent": [
+      [
+        "CASH",
+        34
+      ],
+      [
+        "E_TRANSFER",
+        24
+      ],
+      [
+        "EFT",
+        14
+      ],
+      [
+        "WIRE",
+        12
+      ],
+      [
+        "VIRTUAL_CURRENCY",
+        10
+      ],
+      [
+        "CARD",
+        4
+      ],
+      [
+        "ATM",
+        2
+      ]
+    ],
+    "mule": [
+      [
+        "E_TRANSFER",
+        40
+      ],
+      [
+        "CASH",
+        12
+      ],
+      [
+        "EFT",
+        14
+      ],
+      [
+        "VIRTUAL_CURRENCY",
+        16
+      ],
+      [
+        "CARD",
+        10
+      ],
+      [
+        "WIRE",
+        6
+      ],
+      [
+        "ATM",
+        2
+      ]
+    ]
+  }
+}

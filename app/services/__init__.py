@@ -26,7 +26,7 @@ Each module owns one stage of the pipeline and is independently testable:
     knowledge_graph  customers, cases, alerts, rules, wallets, devices, parties
     retrieval      BM25 over bundled FINTRAC guidance summaries
     statistics     Benford, fences, isolation-style scores, ROC, decomposition
-    book_simulator seeded personas, lognormal amounts, planted typologies
+    book_simulator agent-based Canadian book, planted labels, rule scoring
     studio_data    snapshot queries shared with the Next.js studio API
     langchain_copilot  tool-calling chat with a deterministic fallback
 """
