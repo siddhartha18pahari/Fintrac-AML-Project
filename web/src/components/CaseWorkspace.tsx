@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/Badges";
+import { SlideOver } from "@/components/SlideOver";
+import { StatusRail, Timeline } from "@/components/Timeline";
 import { when } from "@/lib/format";
 import { ASSIGNEES, DISPOSITIONS, STATUSES, useWorkspace } from "@/lib/workspace-store";
 
@@ -18,54 +20,102 @@ export type CaseIndexRow = {
   lvctr_required: boolean;
   str_candidate: boolean;
   disposition: string | null;
+  opened_at?: string | null;
+  due_at?: string | null;
+  risk_drivers?: { label: string; points: number; detail?: string }[];
 };
 
 export function CaseIndex({ namespace, cases }: { namespace: string; cases: CaseIndexRow[] }) {
   const workspace = useWorkspace(namespace);
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const active = cases.find((row) => row.id === activeId) ?? null;
+  const activeOverlay = active ? workspace.overlayFor(active.id, active.status, active.disposition) : null;
+
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-card">
-      <table className="min-w-full text-left text-sm">
-        <caption className="sr-only">Investigation cases</caption>
-        <thead className="border-b border-line text-xs uppercase tracking-wider text-muted">
-          <tr>
-            <th className="px-4 py-3" scope="col">Case</th>
-            <th className="px-4 py-3" scope="col">Customer</th>
-            <th className="px-4 py-3" scope="col">Tier</th>
-            <th className="px-4 py-3" scope="col">Flags</th>
-            <th className="px-4 py-3" scope="col">Assignee</th>
-            <th className="px-4 py-3" scope="col">Status</th>
-            <th className="px-4 py-3" scope="col">Disposition</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cases.map((row) => {
-            const overlay = workspace.overlayFor(row.id, row.status, row.disposition);
-            return (
-              <tr key={row.id} className="border-b border-line last:border-0">
-                <td className="px-4 py-3">
-                  <Link href={`/cases/${row.id}`} className="font-semibold hover:underline">{row.reference}</Link>
-                  <p className="text-xs text-muted">{row.priority}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <Link href={`/customers/${row.customer_id}`} className="hover:underline">{row.customer_name}</Link>
-                </td>
-                <td className="px-4 py-3">
-                  <Badge value={row.risk_tier} />
-                  <span className="num ml-2">{row.risk_score}</span>
-                </td>
-                <td className="px-4 py-3 text-xs text-muted">
-                  {row.lvctr_required ? "LVCTR " : ""}
-                  {row.str_candidate ? "STR review" : ""}
-                </td>
-                <td className="px-4 py-3">{overlay.assignee}</td>
-                <td className="px-4 py-3">{overlay.status.replaceAll("_", " ")}</td>
-                <td className="px-4 py-3">{overlay.disposition ? overlay.disposition.replaceAll("_", " ") : "Undecided"}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="table-shell">
+        <table className="data-table min-w-full">
+          <caption className="sr-only">Investigation cases</caption>
+          <thead>
+            <tr>
+              <th scope="col">Case</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Tier</th>
+              <th scope="col">Flags</th>
+              <th scope="col">Assignee</th>
+              <th scope="col">Status</th>
+              <th scope="col">Disposition</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cases.map((row) => {
+              const overlay = workspace.overlayFor(row.id, row.status, row.disposition);
+              return (
+                <tr key={row.id}>
+                  <td>
+                    <Link href={`/cases/${row.id}`} className="font-semibold hover:underline">{row.reference}</Link>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <Badge value={row.priority} tone={row.priority === "URGENT" ? "CRITICAL" : "INFO"} />
+                      <button type="button" className="text-xs font-semibold text-info underline" onClick={() => setActiveId(row.id)}>
+                        Preview
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <Link href={`/customers/${row.customer_id}`} className="hover:underline">{row.customer_name}</Link>
+                  </td>
+                  <td>
+                    <Badge value={row.risk_tier} />
+                    <span className="num ml-2">{row.risk_score}</span>
+                  </td>
+                  <td className="text-xs text-muted">
+                    {row.lvctr_required ? "LVCTR " : ""}
+                    {row.str_candidate ? "STR review" : ""}
+                  </td>
+                  <td>{overlay.assignee}</td>
+                  <td>{overlay.status.replaceAll("_", " ")}</td>
+                  <td>{overlay.disposition ? overlay.disposition.replaceAll("_", " ") : "Undecided"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <SlideOver open={active != null && activeOverlay != null} title={active?.reference ?? "Case"} kicker={active?.customer_name ?? undefined} onClose={() => setActiveId(null)}>
+        {active && activeOverlay ? (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge value={active.risk_tier} />
+              <Badge value={active.priority} tone={active.priority === "URGENT" ? "CRITICAL" : "INFO"} />
+              <span className="num text-sm text-muted">{active.risk_score}</span>
+            </div>
+            <StatusRail status={activeOverlay.status} />
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between gap-3"><dt className="text-muted">Assignee</dt><dd>{activeOverlay.assignee}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">Disposition</dt><dd>{activeOverlay.disposition ? activeOverlay.disposition.replaceAll("_", " ") : "Undecided"}</dd></div>
+              {active.opened_at ? <div className="flex justify-between gap-3"><dt className="text-muted">Opened</dt><dd>{when(active.opened_at)}</dd></div> : null}
+              {active.due_at ? <div className="flex justify-between gap-3"><dt className="text-muted">Filing due</dt><dd>{when(active.due_at)}</dd></div> : null}
+            </dl>
+            {(active.risk_drivers ?? []).length > 0 ? (
+              <ul className="space-y-3">
+                {(active.risk_drivers ?? []).slice(0, 4).map((driver) => (
+                  <li key={driver.label} className="text-sm">
+                    <div className="flex justify-between gap-3">
+                      <span className="font-semibold">{driver.label}</span>
+                      <span className="num text-muted">+{driver.points}</span>
+                    </div>
+                    {driver.detail ? <p className="text-muted">{driver.detail}</p> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <Link href={`/cases/${active.id}`} className="inline-flex rounded-full bg-spruce px-4 py-2 text-sm font-semibold text-white">
+              Open the working file
+            </Link>
+          </div>
+        ) : null}
+      </SlideOver>
+    </>
   );
 }
 
@@ -87,6 +137,7 @@ export function CaseWorkspace({
 
   return (
     <fieldset disabled={!workspace.ready} className="min-w-0 space-y-4">
+      <StatusRail status={overlay.status} />
       <p className="text-sm text-muted">
         Assignment, status, notes and disposition stay in this browser. They do not submit a report and they do not change the detection snapshot.
       </p>
@@ -173,19 +224,20 @@ export function CaseWorkspace({
       </section>
       <section>
         <h3 className="font-display text-xl text-spruce">Audit trail</h3>
-        {overlay.audit.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">Local actions will appear here, newest first.</p>
-        ) : (
-          <ol className="mt-2 space-y-2">
-            {overlay.audit.map((item) => (
-              <li key={item.id} className="text-sm">
-                <span className="font-semibold">{item.action}</span>
-                <span className="text-muted"> · {item.actor} · {when(item.at)}</span>
-                <p className="text-muted">{item.detail}</p>
-              </li>
-            ))}
-          </ol>
-        )}
+        <div className="mt-3">
+          {overlay.audit.length === 0 ? (
+            <p className="text-sm text-muted">Local actions will appear here, newest first.</p>
+          ) : (
+            <Timeline
+              events={overlay.audit.map((item) => ({
+                at: item.at,
+                kind: "local",
+                title: item.action,
+                detail: `${item.actor}. ${item.detail}`,
+              }))}
+            />
+          )}
+        </div>
       </section>
     </fieldset>
   );

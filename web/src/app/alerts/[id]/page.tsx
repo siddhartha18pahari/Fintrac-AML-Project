@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge } from "@/components/Badges";
 import { PageIntro, Shell } from "@/components/Shell";
+import { Timeline } from "@/components/Timeline";
 import { formatValue, money, observedEntries, when } from "@/lib/format";
 import { alertById, transactionById } from "@/lib/snapshot";
 
@@ -38,7 +39,7 @@ export default async function AlertDetailPage({ params }: { params: Promise<Para
         </Link>
       </p>
       <section className="grid gap-4 lg:grid-cols-2">
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <h2 className="font-display text-2xl text-spruce">Observed</h2>
           <dl className="mt-3 divide-y divide-line text-sm">
             {observedEntries(alert.explanation.observed).map(([key, value]) => (
@@ -49,7 +50,7 @@ export default async function AlertDetailPage({ params }: { params: Promise<Para
             ))}
           </dl>
         </article>
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <h2 className="font-display text-2xl text-spruce">Threshold</h2>
           <dl className="mt-3 divide-y divide-line text-sm">
             {observedEntries(alert.explanation.threshold).map(([key, value]) => (
@@ -63,32 +64,44 @@ export default async function AlertDetailPage({ params }: { params: Promise<Para
       </section>
       <section className="mt-6">
         <h2 className="mb-3 font-display text-2xl text-spruce">Evidence</h2>
-        <div className="overflow-x-auto rounded-2xl border border-line bg-card">
-          <table className="min-w-full text-left text-sm">
+        <div className="table-shell">
+          <table className="data-table min-w-full">
             <caption className="sr-only">Transactions cited by this alert</caption>
-            <thead className="border-b border-line text-xs uppercase tracking-wider text-muted">
+            <thead>
               <tr>
-                <th className="px-4 py-3" scope="col">Reference</th>
-                <th className="px-4 py-3" scope="col">When</th>
-                <th className="px-4 py-3" scope="col">Rail</th>
-                <th className="px-4 py-3" scope="col">Direction</th>
-                <th className="px-4 py-3" scope="col">CAD</th>
+                <th scope="col">Reference</th>
+                <th scope="col">When</th>
+                <th scope="col">Rail</th>
+                <th scope="col">Direction</th>
+                <th scope="col">CAD</th>
               </tr>
             </thead>
             <tbody>
               {evidence.map((txn) => (
-                <tr key={txn.id} className="border-b border-line last:border-0">
-                  <td className="px-4 py-3">
+                <tr key={txn.id}>
+                  <td>
                     <Link href={`/transactions/${txn.id}`} className="font-semibold hover:underline">{txn.transaction_id}</Link>
                   </td>
-                  <td className="num px-4 py-3">{when(txn.occurred_at)}</td>
-                  <td className="px-4 py-3">{txn.instrument === "VIRTUAL_CURRENCY" ? txn.asset : txn.instrument}</td>
-                  <td className="px-4 py-3">{txn.direction}</td>
-                  <td className="num px-4 py-3">{money(txn.cad_value)}</td>
+                  <td className="num">{when(txn.occurred_at)}</td>
+                  <td>{txn.instrument === "VIRTUAL_CURRENCY" ? txn.asset : txn.instrument}</td>
+                  <td>{txn.direction}</td>
+                  <td className="num">{money(txn.cad_value)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="panel glass mt-6 p-5">
+          <h3 className="mb-4 font-display text-2xl text-spruce">Evidence in time</h3>
+          <Timeline
+            events={evidence.map((txn) => ({
+              at: txn.occurred_at,
+              kind: txn.direction.toLowerCase(),
+              title: txn.transaction_id,
+              detail: `${txn.instrument === "VIRTUAL_CURRENCY" ? txn.asset : txn.instrument} · ${txn.direction} · ${money(txn.cad_value)}`,
+              href: `/transactions/${txn.id}`,
+            }))}
+          />
         </div>
       </section>
     </Shell>

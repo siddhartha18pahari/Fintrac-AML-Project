@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV } from "@/lib/nav";
@@ -55,12 +55,11 @@ function NavItem({
   variant: "side" | "top";
   shortcut?: string;
 }) {
+  const reduce = useReducedMotion() === true;
   const base = variant === "side" ? "flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm" : "whitespace-nowrap rounded-full px-3 py-1.5 text-sm";
-  const state = active
-    ? "bg-white/10 font-semibold text-white shadow-[inset_2px_0_0_#e2c48a]"
-    : "text-[#d7e4de] hover:bg-white/10 hover:text-white";
+  const state = active ? "nav-active font-semibold text-white" : "text-[#d7e4de] hover:bg-white/10 hover:text-white";
   return (
-    <motion.div whileHover={{ x: variant === "side" ? 3 : 0 }} transition={{ duration: 0.16 }}>
+    <motion.div whileHover={reduce || variant !== "side" ? undefined : { x: 3 }} transition={{ duration: 0.16 }}>
       <Link href={href} className={`${base} ${state}`} aria-current={active ? "page" : undefined}>
         <span>{label}</span>
         {shortcut ? <span className="num text-[10px] uppercase tracking-wider text-white/35">{shortcut}</span> : null}

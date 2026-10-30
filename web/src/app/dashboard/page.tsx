@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Badge } from "@/components/Badges";
 import { RuleBars, TierBars, VolumeChart } from "@/components/Charts";
+import { NumberTicker } from "@/components/NumberTicker";
 import { PageIntro, Shell } from "@/components/Shell";
 import { FundSankey, Sparkline, VolumeHeatmap } from "@/components/Viz";
 import { money } from "@/lib/format";
@@ -53,7 +54,7 @@ export default function DashboardPage() {
           ["/geography", "Geography"],
           ["/filings", "Draft filings"],
         ].map(([href, label]) => (
-          <Link key={href} href={href} className="rounded-full border border-line bg-card/80 px-3 py-1.5 font-semibold backdrop-blur transition hover:-translate-y-0.5 hover:border-brass">
+          <Link key={href} href={href} className="pill text-sm">
             {label}
           </Link>
         ))}
@@ -64,7 +65,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
-                <p className="num mt-1 text-4xl tracking-tight text-spruce">{value}</p>
+                <NumberTicker value={Number(value)} className="num mt-1 block text-4xl tracking-tight text-spruce" />
                 <p className="mt-1 text-sm text-muted">{note}</p>
               </div>
               <Sparkline values={spark} label={`${label} against recent volume`} />
@@ -90,12 +91,12 @@ export default function DashboardPage() {
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <h2 className="font-display text-2xl text-spruce">Incoming value</h2>
           <p className="mb-3 text-sm text-muted">Last three weeks of receipts, split by rail. Cash spikes are the planted LCTR and structuring days.</p>
           <VolumeChart series={data.series.slice(-21)} />
         </article>
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <h2 className="font-display text-2xl text-spruce">Residual risk</h2>
           <p className="mb-4 text-sm text-muted">Inherent onboarding risk blended with the open alert score. {counts.customers} relationships.</p>
           <TierBars tiers={data.kpis.tiers} total={counts.customers} />
@@ -105,7 +106,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="font-display text-2xl text-spruce">Highest residual risk</h2>
             <Link href="/customers" className="text-sm text-info underline">All customers</Link>
@@ -125,7 +126,7 @@ export default function DashboardPage() {
             ))}
           </ul>
         </article>
-        <article className="rounded-2xl border border-line bg-card p-5">
+        <article className="panel glass p-5">
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="font-display text-2xl text-spruce">Latest alerts</h2>
             <Link href="/alerts" className="text-sm text-info underline">Alert queue</Link>
@@ -155,7 +156,7 @@ export default function DashboardPage() {
           </Link>
         ) : null}
         {harbour ? (
-          <Link href={`/customers/${harbour.id}`} className="rounded-2xl border border-line bg-card p-5">
+          <Link href={`/customers/${harbour.id}`} className="panel glass block p-5">
             <p className="text-xs uppercase tracking-wider text-brass">Flagship cash case</p>
             <h2 className="mt-2 font-display text-2xl text-spruce">{harbour.name}</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">

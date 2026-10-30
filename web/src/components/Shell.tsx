@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { MotionMain } from "@/components/MotionMain";
 import { NavLinks } from "@/components/Nav";
 import { SearchButton } from "@/components/CommandPalette";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -7,13 +8,17 @@ import { data } from "@/lib/snapshot";
 
 export function Shell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[268px_1fr]">
-      <aside className="no-print relative hidden border-r border-white/10 bg-spruce-deep text-[#e7f0eb] shadow-[16px_0_50px_rgba(7,20,16,0.28)] md:flex md:max-h-screen md:flex-col md:justify-between md:overflow-x-hidden md:overflow-y-auto md:px-4 md:py-6">
-        <div className="pointer-events-none absolute -left-10 top-0 h-40 w-40 rounded-full bg-[#3dbea0]/20 blur-3xl" aria-hidden="true" />
+    <div className="min-h-screen md:grid md:grid-cols-[280px_1fr]">
+      <aside className="glass-side no-print relative hidden text-[#e7f0eb] md:flex md:max-h-screen md:flex-col md:justify-between md:overflow-x-hidden md:overflow-y-auto md:px-4 md:py-6">
+        <div className="pointer-events-none absolute -left-10 top-0 h-40 w-40 rounded-full bg-[#3dbea0]/25 blur-3xl" aria-hidden="true" />
+        <div className="pointer-events-none absolute bottom-10 right-0 h-28 w-28 rounded-full bg-[#e2c48a]/15 blur-3xl" aria-hidden="true" />
         <div className="relative">
           <Link href="/" className="block px-3">
             <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-brass-soft">
-              <span className="inline-block h-2 w-2 rounded-full bg-[#e2c48a] shadow-[0_0_12px_#e2c48a]" />
+              <span className="relative inline-flex h-2.5 w-2.5">
+                <span className="absolute inset-0 rounded-full bg-[#e2c48a] opacity-70 step-pulse" />
+                <span className="relative inline-block h-2.5 w-2.5 rounded-full bg-[#e2c48a]" />
+              </span>
               Sentinel
             </span>
             <span className="mt-1 block font-display text-2xl tracking-tight text-white">FINTRAC workspace</span>
@@ -31,18 +36,34 @@ export function Shell({ children, wide = false }: { children: React.ReactNode; w
         </div>
       </aside>
       <div className="min-w-0">
-        <header className="no-print border-b border-line bg-spruce-deep px-4 py-3 text-[#e7f0eb] md:hidden">
+        <header className="no-print border-b border-white/10 bg-[#071410]/90 px-4 py-3 text-[#e7f0eb] backdrop-blur-xl md:hidden">
           <div className="mb-3 flex items-center justify-between gap-3">
             <Link href="/" className="font-display text-lg text-white">
               Sentinel
             </Link>
             <ThemeToggle compact />
           </div>
+          <SearchButton
+            label="Search the book"
+            className="command-trigger mb-3 flex w-full items-center justify-between rounded-full px-3 py-2.5 text-left text-sm text-[#d7e4de]"
+          />
           <NavLinks variant="top" />
         </header>
+        <div className="no-print sticky top-0 z-30 hidden border-b border-white/10 bg-[#071410]/80 px-4 py-3 text-[#e7f0eb] backdrop-blur-xl md:block sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <SearchButton
+              label="Search customers, alerts, rules…"
+              className="command-trigger flex min-w-0 flex-1 items-center justify-between gap-3 rounded-full px-4 py-2.5 text-left text-sm text-[#d7e4de] md:max-w-xl"
+            />
+            <p className="hidden text-xs text-[#b7c9c0] lg:block">
+              Book <span className="num">{data.meta.as_of.slice(0, 10)}</span>
+            </p>
+            <ThemeToggle compact />
+          </div>
+        </div>
         <main className={wide ? "px-4 py-6 sm:px-6 lg:px-8" : "mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"}>
           <Breadcrumbs />
-          {children}
+          <MotionMain>{children}</MotionMain>
         </main>
       </div>
     </div>

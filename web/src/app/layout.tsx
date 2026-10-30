@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { CommandPaletteHost } from "@/components/CommandPaletteHost";
 import { Shortcuts } from "@/components/Shortcuts";
+import { Spotlight } from "@/components/Spotlight";
 import "./globals.css";
 
 const sans = Geist({
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${sans.variable} ${mono.variable} ${display.variable} font-sans antialiased`}>
         <script
           dangerouslySetInnerHTML={{
@@ -41,9 +42,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2">
           Skip to content
         </a>
-        <Shortcuts />
-        <CommandPaletteHost />
-        <div id="content">{children}</div>
+        <Spotlight>
+          <Shortcuts />
+          <CommandPaletteHost />
+          <div id="content">{children}</div>
+        </Spotlight>
       </body>
     </html>
   );
