@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CopilotChat } from "@/components/CopilotChat";
+import { AgentChat } from "@/components/AgentChat";
 import { PageIntro, Shell } from "@/components/Shell";
 import { data } from "@/lib/snapshot";
 
@@ -10,13 +10,10 @@ export default function CopilotPage() {
     <Shell>
       <PageIntro
         kicker={`${data.guidance.length} guidance notes`}
-        title="Ask, and read the citation"
-        lede="The copilot retrieves Sentinel's own summaries of public FINTRAC guidance. A model writes the reply only when an AI Gateway or OpenAI key is configured. Otherwise you get the notes themselves."
+        title="Ask, and watch the tools"
+        lede="LangChain tools look up alerts, entities, graph paths, rules and statistics, then a retriever cites the bundled guidance. A model writes the reply only when a key is set. Otherwise the same tools still run."
       />
-      <CopilotChat
-        customers={data.customers.map((customer) => ({ id: customer.id, name: customer.name }))}
-        cases={data.cases.map((row) => ({ id: row.id, reference: row.reference, customer_name: row.customer_name }))}
-      />
+      <AgentChat />
     </Shell>
   );
 }

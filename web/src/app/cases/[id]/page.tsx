@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge } from "@/components/Badges";
-import { CaseWorkspace } from "@/components/CaseWorkspace";
+import { CaseWorkspace, InvestigationCanvas } from "@/components/CaseWorkspace";
 import { PageIntro, Shell } from "@/components/Shell";
 import { Timeline } from "@/components/Timeline";
 import { when } from "@/lib/format";
+import { caseDeadline } from "@/lib/sla";
 import { data } from "@/lib/snapshot";
 
 type Params = { id: string };
@@ -24,13 +25,34 @@ export default async function CasePage({ params }: { params: Promise<Params> }) 
   const report = data.reports.find((item) => item.case_id === row.id);
   const filing = data.filings.find((item) => item.case_id === row.id);
   const namespace = `${data.meta.as_of}:${data.meta.counts.cases}`;
+  const deadline = caseDeadline(row, data.alerts, data.meta.as_of);
+  const seeds = [
+    ...alerts.slice(0, 4).map((alert, index) => ({
+      id: `alert-${alert.id}`,
+      kind: "alert",
+      ref: String(alert.id),
+      label: alert.rule_id,
+      detail: alert.title,
+      x: 4 + (index % 3) * 30,
+      y: 8 + Math.floor(index / 3) * 38,
+    })),
+    ...(row.risk_drivers ?? []).slice(0, 3).map((driver, index) => ({
+      id: `driver-${index}`,
+      kind: "driver",
+      ref: driver.key,
+      label: driver.label,
+      detail: driver.detail,
+      x: 8 + index * 28,
+      y: 58,
+    })),
+  ];
 
   return (
-    <Shell>
+    <Shell wide>
       <PageIntro
         kicker={row.reference}
         title={row.customer_name ?? "Case"}
-        lede="The score and the evidence come from the detection run. The assignment, notes and disposition are yours, and they stay on this machine."
+        lede="The score and the evidence come from the detection run. Assignment, the canvas, notes, attachments and the four-eyes decision stay on this machine."
       />
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <Badge value={row.risk_tier} />
@@ -40,6 +62,9 @@ export default async function CasePage({ params }: { params: Promise<Params> }) 
         <Link href={`/customers/${row.customer_id}`} className="text-sm text-info underline">Customer 360</Link>
         {report ? <Link href={`/reports/${row.id}`} className="text-sm text-info underline">STR narrative</Link> : null}
         {filing ? <Link href={`/filings/${filing.id}`} className="text-sm text-info underline">Draft filing</Link> : null}
+      </div>
+      <div className="mb-4">
+        <InvestigationCanvas namespace={namespace} caseId={row.id} status={row.status} disposition={row.disposition} seeds={seeds} />
       </div>
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <article className="panel glass p-5">
@@ -87,7 +112,14 @@ export default async function CasePage({ params }: { params: Promise<Params> }) 
         <article className="panel glass p-5">
           <h2 className="font-display text-2xl text-spruce">Working file</h2>
           <div className="mt-3">
-            <CaseWorkspace namespace={namespace} caseId={row.id} status={row.status} disposition={row.disposition} />
+            <CaseWorkspace
+              namespace={namespace}
+              caseId={row.id}
+              status={row.status}
+              disposition={row.disposition}
+              asOf={data.meta.as_of}
+              deadline={deadline}
+            />
           </div>
         </article>
       </div>

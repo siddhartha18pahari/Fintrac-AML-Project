@@ -25,4 +25,8 @@ Each module owns one stage of the pipeline and is independently testable:
     draft_filings  FINTRAC-like STR, LCTR, EFTR and TPR drafts
     knowledge_graph  customers, cases, alerts, rules, wallets, devices, parties
     retrieval      BM25 over bundled FINTRAC guidance summaries
+    statistics     Benford, fences, isolation-style scores, ROC, decomposition
+    book_simulator seeded personas, lognormal amounts, planted typologies
+    studio_data    snapshot queries shared with the Next.js studio API
+    langchain_copilot  tool-calling chat with a deterministic fallback
 """

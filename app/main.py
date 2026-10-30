@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import SERVERLESS, settings
 from .db import init_db, session_scope
-from .routers import auth, cases, data, detection, insights, reports
+from .routers import auth, cases, data, detection, insights, reports, studio
 from .services.rules_engine import sync_rule_versions
 
 log = logging.getLogger("sentinel")
@@ -31,6 +31,7 @@ Explainable AML monitoring and regulatory reporting for virtual-currency transac
 * evidence-grounded STR drafting with an unsupported-claim verifier
 * LVCTR generation with five-level validation
 * hash-chained audit trail
+* studio endpoints over the bundled synthetic snapshot (alerts, cases, entities, graph, stats, simulation, chat)
 
 All data in this deployment is **synthetic**. Reports are submitted to a local
 mock receiver only; this system is not connected to FINTRAC.
@@ -94,6 +95,16 @@ app.include_router(cases.router)
 app.include_router(reports.router)
 app.include_router(reports.mock_router)
 app.include_router(insights.router)
+app.include_router(studio.router)
+
+
+def _langchain_available() -> bool:
+    try:
+        from .services.langchain_copilot import langchain_installed
+
+        return langchain_installed()
+    except Exception:
+        return False
 
 
 @app.get("/api/health", tags=["meta"])
@@ -115,6 +126,8 @@ def health() -> dict:
         },
         "capabilities": {
             "anomaly_detection": SKLEARN_AVAILABLE,
+            "studio": True,
+            "langchain": _langchain_available(),
         },
     }
 

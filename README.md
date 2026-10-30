@@ -149,6 +149,22 @@ sanctions-screening entity.
 The geography page uses a Natural Earth world atlas committed at
 `web/public/geo/countries-50m.json` (world-atlas 2). It does not need an API key.
 
+### Studio additions
+
+The workspace now also has:
+
+- an analyst desk on each case: SLA clock, investigation canvas, notes, local evidence attachments, a four-eyes approval that blocks self-approval, and a hash-chained local audit trail
+- a triage queue with lanes and a four-eyes filter
+- a force-directed transaction map (Louvain communities, betweenness sizing, animated money flow, cycle and round-trip highlighting, fan-in/fan-out, a time slider)
+- a 3D knowledge-graph view with entity glyphs, risk halos, an ego-network control, a timeline, and an animated path
+- a transaction simulator with personas, lognormal amounts, time-of-day and seasonality, payroll and rent, and planted typologies whose rule hits update as the controls move
+- a statistics page: Benford, IQR and z-scores, an isolation-forest-style score, histograms and KDE, velocity, peer ratios, a correlation heatmap, weekly decomposition, and a threshold tuner. Precision and recall on that page are against planted scenario labels, not adjudicated laundering
+- a LangChain copilot. Tools cover alerts, entities, graph paths, rules, statistics, and the guidance retriever. Streaming replies include the tool trace and citations
+
+`/api/v2/*` in the Next.js app is typed with zod and reads the bundled snapshot, so `npm run build` in `web/` needs no environment variables. If `OPENAI_API_KEY` or `AI_GATEWAY_API_KEY` is absent, the copilot still routes the same tools and cites the notes.
+
+The FastAPI service mirrors that surface at `/api/studio/*` (OpenAPI at `/docs`): alerts, cases, entities, graph, stats, simulation, and chat. The Python chat uses LangChain when `langchain-core` is installed (see `requirements-dev.txt`) and the same deterministic router when no model key is set. Statistics and the book simulator live in `app/services/statistics.py` and `app/services/book_simulator.py`.
+
 ---
 
 ## Deploying
@@ -246,7 +262,8 @@ Full script: [docs/DEMO_SCENARIOS.md](docs/DEMO_SCENARIOS.md).
 - **Backend** FastAPI · SQLAlchemy 2.0 · Pydantic v2 · SQLite (Postgres-ready via `DATABASE_URL`)
 - **Analytics** NetworkX · scikit-learn (Isolation Forest) · NumPy
 - **Operational console** vanilla ES modules, no build step, no external requests — including a hand-rolled force-directed SVG graph
-- **Workspace** Next.js · TypeScript · Tailwind, in `web/`, reading a bundled snapshot
+- **Workspace** Next.js · TypeScript · Tailwind, in `web/`, reading a bundled snapshot. Zod studio routes, a LangChain.js copilot with a no-key fallback, and WebGL force graphs
+- **Studio API** FastAPI routes under `/api/studio` over the same snapshot, with a Python LangChain copilot that degrades to deterministic tool routing
 - **Validation** hand-written JSON Schema + four local rule levels + the receiver's verdict
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
