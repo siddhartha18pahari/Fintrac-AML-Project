@@ -1,11 +1,14 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AssistNote, SourceNote } from "@/components/Assist";
 import { Badge } from "@/components/Badges";
 import { RuleBars, TierBars, VolumeChart } from "@/components/Charts";
+import { IncomingHeat } from "@/components/IncomingHeat";
 import { NumberTicker } from "@/components/NumberTicker";
 import { PageIntro, Shell } from "@/components/Shell";
-import { FundSankey, Sparkline, VolumeHeatmap } from "@/components/Viz";
+import { FundSankey, Sparkline } from "@/components/Viz";
 import { money } from "@/lib/format";
+import { buildIncomingHeat } from "@/lib/incoming-heat";
 import { data } from "@/lib/snapshot";
 
 export const metadata: Metadata = { title: "Overview" };
@@ -26,6 +29,17 @@ export default function DashboardPage() {
   const tone = { CASH: "#9a5720", EFT: "#1c4f78", VIRTUAL_CURRENCY: "#1d684f" } as const;
   const label = { CASH: "Cash", EFT: "Wires", VIRTUAL_CURRENCY: "Virtual" } as const;
   const spark = data.series.slice(-21).map((row) => row.total);
+  const heat = buildIncomingHeat(
+    data.transactions.map((txn) => ({
+      at: txn.occurred_at,
+      direction: txn.direction,
+      cad: txn.cad_value,
+      instrument: txn.instrument,
+    })),
+    data.meta.as_of,
+    31,
+  );
+  const anomaly = data.anomaly[0];
 
   const cards = [
     ["Alerts", counts.alerts, "Open indicators across the book"],
@@ -39,10 +53,19 @@ export default function DashboardPage() {
   return (
     <Shell>
       <PageIntro
-        kicker="Monitoring workspace"
+        kicker="1 · Portfolio"
         title="The book, as of the snapshot"
-        lede={`${counts.transactions} synthetic transactions across ${counts.customers} customers. Indicators are inputs to a review. They are not a disposition.`}
+        lede={`${counts.transactions} synthetic transactions across ${counts.customers} customers, frozen at ${data.meta.as_of.replace("T", " ").slice(0, 16)} UTC. Indicators are inputs to a review. They are not a disposition. Next: open an alert, then the customer, the network, and the rule that fired.`}
       />
+      <AssistNote title="Where to start">
+        Read the portfolio counts, then the 31-day incoming heat. A dark day is more incoming CAD, not a higher risk score. Use All customers for the full directory and Alert queue for every alert, with no filter applied. Sentinel is this snapshot plus the catalogue. It does not receive a live feed and it does not file.
+      </AssistNote>
+      <section className="panel mb-6 p-4 text-sm leading-6">
+        <h2 className="text-base font-semibold">What Sentinel is doing</h2>
+        <p className="mt-2 text-muted">
+          The pipeline that produced this book valued each transaction in CAD, ran catalogue {data.meta.catalogue_version}, and stored alerts with the observed value, the threshold, and the evidence ids. Customer residual risk is the stored blend of onboarding and open-alert behaviour. The anomaly column is {anomaly?.model_name ?? "the bundled model"} {anomaly?.model_version ?? ""}, computed {anomaly?.computed_at?.replace("T", " ").slice(0, 16) ?? "with the snapshot"} UTC. Assignment and approvals after that stay in this browser. Nothing is submitted to FINTRAC.
+        </p>
+      </section>
       <nav aria-label="Workspace tools" className="mb-6 flex flex-wrap gap-2 text-sm">
         {[
           ["/triage", "Triage queue"],
@@ -61,7 +84,7 @@ export default function DashboardPage() {
       </nav>
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map(([label, value, note]) => (
-          <article key={label} className="panel glass px-4 py-4">
+          <article key={label} className="panel px-4 py-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
@@ -75,41 +98,50 @@ export default function DashboardPage() {
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <article className="panel glass p-5">
-          <h2 className="font-display text-2xl text-spruce">Where value moves</h2>
+        <article className="panel p-5">
+          <h2 className="text-base font-semibold text-ink">Where value moves</h2>
           <p className="mb-2 text-sm text-muted">Receipts enter on the left. Payments leave on the right. The centre is the book, not a claim that one dollar became the other.</p>
           <FundSankey
             incoming={(["CASH", "EFT", "VIRTUAL_CURRENCY"] as const).map((rail) => ({ label: label[rail], value: flows.in[rail], tone: tone[rail] }))}
             outgoing={(["CASH", "EFT", "VIRTUAL_CURRENCY"] as const).map((rail) => ({ label: label[rail], value: flows.out[rail], tone: tone[rail] }))}
           />
+          <SourceNote>Sums of cad_value on the snapshot ledger, grouped by instrument and direction. Each transaction is counted once. Incoming and outgoing are not the same money. No live market feed.</SourceNote>
         </article>
-        <article className="panel glass p-5">
-          <h2 className="font-display text-2xl text-spruce">Incoming heat</h2>
-          <p className="mb-4 text-sm text-muted">Each cell is a day. Darker means more value received.</p>
-          <VolumeHeatmap days={data.series.map((row) => ({ date: row.date, total: row.total }))} />
+        <article className="panel p-5">
+          <h2 className="text-base font-semibold text-ink">Incoming heat, 31 days</h2>
+          <p className="mb-4 text-sm text-muted">{heat.start} through {heat.end}, Monday to Sunday. Select a day for the amount and the count.</p>
+          <IncomingHeat rows={heat.rows} start={heat.start} end={heat.end} max={heat.max} />
+          <SourceNote>
+            {heat.days} calendar days ending on the snapshot date. Amount is the sum of incoming cad_value. Count is the number of those transactions ({heat.incomingCount} in the window). {heat.excludedOutgoing} outgoing transactions are excluded. Days with no incoming row are zero, not omitted. The daily series chart below drops empty days.
+          </SourceNote>
         </article>
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <article className="panel glass p-5">
-          <h2 className="font-display text-2xl text-spruce">Incoming value</h2>
-          <p className="mb-3 text-sm text-muted">Last three weeks of receipts, split by rail. Cash spikes are the planted LCTR and structuring days.</p>
+        <article className="panel p-5">
+          <h2 className="text-base font-semibold text-ink">Incoming value</h2>
+          <p className="mb-3 text-sm text-muted">Last 21 days that have an incoming total, split by rail. The axis is CAD. Empty calendar days are not drawn.</p>
           <VolumeChart series={data.series.slice(-21)} />
+          <SourceNote>Built from the snapshot series: incoming transactions only, summed by calendar day into cash, electronic transfer, and virtual currency. Window {data.series.slice(-21)[0]?.date} to {data.series.at(-1)?.date}.</SourceNote>
         </article>
-        <article className="panel glass p-5">
-          <h2 className="font-display text-2xl text-spruce">Residual risk</h2>
-          <p className="mb-4 text-sm text-muted">Inherent onboarding risk blended with the open alert score. {counts.customers} relationships.</p>
+        <article className="panel p-5">
+          <h2 className="text-base font-semibold text-ink">Residual risk</h2>
+          <p className="mb-4 text-sm text-muted">{counts.customers} relationships, counted by the stored tier. No shadow and no pulse: the length is the count.</p>
           <TierBars tiers={data.kpis.tiers} total={counts.customers} />
+          <SourceNote>Counts come from the snapshot tier rollup. Each customer’s stored residual is round(0.6 × inherent + 0.7 × behavioural), clamped to 0–100. This card does not recompute it and does not change the count.</SourceNote>
           <h3 className="mb-3 mt-6 text-sm font-semibold uppercase tracking-wider text-muted">Most common rules</h3>
           <RuleBars rules={data.kpis.rules} />
         </article>
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
-        <article className="panel glass p-5">
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="font-display text-2xl text-spruce">Highest residual risk</h2>
-            <Link href="/customers" className="text-sm text-info underline">All customers</Link>
+        <article className="panel p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-ink">Highest residual risk</h2>
+              <p className="text-xs text-muted">Six stored scores. The directory is the full book of {counts.customers}.</p>
+            </div>
+            <Link href="/customers" className="btn btn-secondary">All customers</Link>
           </div>
           <ul className="divide-y divide-line">
             {topCustomers.map((customer) => (
@@ -126,10 +158,13 @@ export default function DashboardPage() {
             ))}
           </ul>
         </article>
-        <article className="panel glass p-5">
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="font-display text-2xl text-spruce">Latest alerts</h2>
-            <Link href="/alerts" className="text-sm text-info underline">Alert queue</Link>
+        <article className="panel p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-ink">Latest alerts</h2>
+              <p className="text-xs text-muted">Six most recent. The queue opens with no severity or rule filter.</p>
+            </div>
+            <Link href="/alerts" className="btn btn-secondary">Alert queue</Link>
           </div>
           <ul className="divide-y divide-line">
             {recent.map((alert) => (
@@ -156,7 +191,7 @@ export default function DashboardPage() {
           </Link>
         ) : null}
         {harbour ? (
-          <Link href={`/customers/${harbour.id}`} className="panel glass block p-5">
+          <Link href={`/customers/${harbour.id}`} className="panel block p-5">
             <p className="text-xs uppercase tracking-wider text-brass">Flagship cash case</p>
             <h2 className="mt-2 font-display text-2xl text-spruce">{harbour.name}</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">

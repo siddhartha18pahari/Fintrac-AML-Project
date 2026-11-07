@@ -15,6 +15,8 @@ export default function StatisticsPage() {
       />
       <StatisticsBoard
         plantedRecall={data.performance.recall}
+        modelName={data.anomaly[0] ? `${data.anomaly[0].model_name} ${data.anomaly[0].model_version}` : "Stored anomaly score"}
+        computedAt={data.anomaly[0]?.computed_at ?? data.meta.as_of}
         series={data.series.map((point) => ({ date: point.date, total: point.total }))}
         transactions={data.transactions.map((txn) => ({
           customerId: txn.customer_id,

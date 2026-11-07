@@ -179,28 +179,41 @@ export function gaussianKde(values: number[], points = 40) {
   return { bandwidth, grid, density };
 }
 
-export function pearson(left: number[], right: number[]) {
-  if (left.length !== right.length || left.length < 2) return 0;
-  const meanLeft = mean(left);
-  const meanRight = mean(right);
+export function pearson(left: number[], right: number[]): number | null {
+  if (left.length !== right.length) return null;
+  const pairs: [number, number][] = [];
+  for (let index = 0; index < left.length; index += 1) {
+    const a = left[index];
+    const b = right[index];
+    if (Number.isFinite(a) && Number.isFinite(b)) pairs.push([a, b]);
+  }
+  if (pairs.length < 2) return null;
+  const meanLeft = pairs.reduce((sum, pair) => sum + pair[0], 0) / pairs.length;
+  const meanRight = pairs.reduce((sum, pair) => sum + pair[1], 0) / pairs.length;
   let numerator = 0;
   let leftScale = 0;
   let rightScale = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    const a = left[index] - meanLeft;
-    const b = right[index] - meanRight;
-    numerator += a * b;
-    leftScale += a * a;
-    rightScale += b * b;
+  for (const [a, b] of pairs) {
+    const da = a - meanLeft;
+    const db = b - meanRight;
+    numerator += da * db;
+    leftScale += da * da;
+    rightScale += db * db;
   }
-  if (leftScale === 0 || rightScale === 0) return 0;
+  if (leftScale === 0 || rightScale === 0) return null;
   return numerator / Math.sqrt(leftScale * rightScale);
 }
 
 export function correlationMatrix(columns: Record<string, number[]>) {
   const names = Object.keys(columns);
+  const lengths = names.map((name) => columns[name].length);
   const matrix = names.map((row) => names.map((column) => pearson(columns[row], columns[column])));
-  return { names, matrix };
+  return {
+    names,
+    matrix,
+    n: lengths.length ? Math.min(...lengths) : 0,
+    method: "pearson" as const,
+  };
 }
 
 export function decompose(series: number[], period = 7) {

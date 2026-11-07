@@ -18,7 +18,7 @@ export function Breadcrumbs() {
   });
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted">
+    <nav aria-label="Breadcrumb" className="text-sm text-muted">
       <ol className="flex flex-wrap items-center gap-1.5">
         <li>
           <Link href="/dashboard" className="hover:text-ink">

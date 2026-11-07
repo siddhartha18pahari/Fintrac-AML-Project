@@ -165,7 +165,7 @@ export function CaseWorkspace({
         </div>
       ) : null}
       <p className="text-sm text-muted">
-        Assignment, notes, evidence and the four-eyes decision stay in this browser. They do not submit a report and they do not change the detection snapshot.
+        Assignment, notes, evidence and the four-eyes decision stay in this browser under the snapshot key. They do not submit a report, do not change the detection snapshot, and do not prove who is at the keyboard.
       </p>
       {workspace.notice ? <p className="rounded-xl border border-brass/40 bg-brass/10 px-3 py-2 text-sm" role="status">{workspace.notice}</p> : null}
       <div className="grid gap-3 sm:grid-cols-3">
@@ -199,7 +199,7 @@ export function CaseWorkspace({
           <h3 className="font-display text-xl text-spruce">Four-eyes</h3>
           <Badge value={overlay.approval.status} tone={overlay.approval.status === "approved" ? "LOW" : overlay.approval.status === "rejected" ? "CRITICAL" : "INFO"} />
         </div>
-        <p className="mt-1 text-sm text-muted">The requester cannot approve their own case. The second review is L. Chen or D. Vasquez.</p>
+        <p className="mt-1 text-sm text-muted">The requester cannot approve their own case. The second review is L. Chen or D. Vasquez. Both names are labels in this browser. Approval is simulated and is not an authenticated control. It does not submit a report.</p>
         {overlay.approval.requestedBy ? (
           <p className="mt-2 text-sm">Requested by {overlay.approval.requestedBy}{overlay.approval.decidedBy ? ` · decided by ${overlay.approval.decidedBy}` : ""}.</p>
         ) : null}

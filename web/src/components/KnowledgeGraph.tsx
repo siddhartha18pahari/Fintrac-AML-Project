@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { shortestPath } from "@/lib/bm25";
+import { money, when } from "@/lib/format";
+import { relationBasis, type EdgeFact } from "@/lib/graph-evidence";
 
 export type GraphNode = {
   id: string;
@@ -29,12 +31,25 @@ const RISK_FLOORS = [
   { value: 75, label: "75+" },
 ];
 
+const KIND_FILL: Record<string, string> = {
+  customer: "#1d4e89",
+  alert: "#8f2d2d",
+  case: "#8a4b12",
+  rule: "#5c6b7a",
+  typology: "#7a6420",
+  wallet: "#1d6b45",
+  device: "#3d5a80",
+  beneficiary: "#5c4d7a",
+  third_party: "#5c4d7a",
+  ip: "#3d5a80",
+};
+
 function riskColor(risk: number | null | undefined) {
   if (risk == null) return "#7f948c";
-  if (risk >= 75) return "#e06b76";
-  if (risk >= 50) return "#e39a55";
-  if (risk >= 25) return "#e2c48a";
-  return "#3dbea0";
+  if (risk >= 75) return "#8f2d2d";
+  if (risk >= 50) return "#8a4b12";
+  if (risk >= 25) return "#8a5a12";
+  return "#1d6b45";
 }
 
 function isSanction(node: GraphNode) {
@@ -150,10 +165,14 @@ export function KnowledgeGraph({
   nodes,
   edges,
   disclaimer,
+  facts = {},
+  focusId = null,
 }: {
   nodes: GraphNode[];
   edges: GraphEdge[];
   disclaimer: string;
+  facts?: Record<string, EdgeFact>;
+  focusId?: string | null;
 }) {
   const byId = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes]);
   const neighbours = useMemo(() => {
@@ -171,7 +190,8 @@ export function KnowledgeGraph({
   const kindsPresent = useMemo(() => COLUMNS.filter((kind) => nodes.some((node) => node.kind === kind)), [nodes]);
   const sanctioned = useMemo(() => nodes.filter(isSanction), [nodes]);
   const [focus, setFocus] = useState<Set<string>>(seed);
-  const [selected, setSelected] = useState<string | null>(seed.values().next().value ?? null);
+  const [selected, setSelected] = useState<string | null>(focusId && nodes.some((node) => node.id === focusId) ? focusId : seed.values().next().value ?? null);
+  const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [from, setFrom] = useState("");
@@ -185,6 +205,15 @@ export function KnowledgeGraph({
   const drag = useRef<{ x: number; y: number; cx: number; cy: number } | null>(null);
   const surface = useRef<HTMLDivElement>(null);
   const pendingCenter = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!focusId || !byId.has(focusId)) return;
+    setSelected(focusId);
+    const next = new Set<string>([focusId]);
+    for (const id of neighbours.get(focusId) ?? []) next.add(id);
+    setFocus(next);
+    pendingCenter.current = focusId;
+  }, [focusId, byId, neighbours]);
 
   useEffect(() => {
     const element = surface.current;
@@ -504,37 +533,54 @@ export function KnowledgeGraph({
           <p className="text-sm text-muted" role="status">{pathNote || "A path is a connection to inspect, not a finding."}</p>
         </fieldset>
         {selectedNode ? (
-          <article className="panel glass p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-brass">{selectedNode.kind}</p>
-            <h2 className="font-display text-2xl tracking-tight text-spruce">{selectedNode.label}</h2>
+          <article className="panel p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{selectedNode.kind}</p>
+            <h2 className="text-base font-semibold text-ink">{selectedNode.label}</h2>
             <p className="mt-1 text-sm text-muted">{selectedNode.detail}</p>
-            <p className="num mt-2 text-sm">Risk {selectedNode.risk ?? "—"}{isSanction(selectedNode) ? " · sanctions node" : ""}</p>
+            <p className="num mt-2 text-sm">Stored risk {selectedNode.risk ?? "—"}{isSanction(selectedNode) ? " · name matches the sanctions sample" : ""}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={() => expand(selectedNode.id, true)} className="rounded-full border border-line px-3 py-1.5 text-sm font-semibold">Focus</button>
-              {selectedNode.href ? (
-                <Link href={selectedNode.href} className="rounded-full bg-spruce px-3 py-1.5 text-sm font-semibold text-white">Open</Link>
-              ) : null}
+              <button type="button" className="btn btn-secondary" onClick={() => expand(selectedNode.id, true)}>Focus neighbourhood</button>
+              {selectedNode.href ? <Link href={selectedNode.href} className="btn btn-primary">Open record</Link> : null}
             </div>
+            <h3 className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-muted">Relationships</h3>
+            <ul className="max-h-64 space-y-2 overflow-auto">
+              {edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id).slice(0, 12).map((edge) => {
+                const fact = facts[edge.id];
+                const otherId = edge.source === selectedNode.id ? edge.target : edge.source;
+                const other = byId.get(otherId);
+                const active = selectedEdge === edge.id;
+                return (
+                  <li key={edge.id}>
+                    <button type="button" aria-pressed={active} className="w-full rounded-md border border-line px-2 py-2 text-left text-sm" onClick={() => setSelectedEdge(edge.id)}>
+                      <span className="font-semibold">{fact?.basis === "observed" ? "Observed" : "Derived"} · {edge.relation}</span>
+                      <span className="mt-0.5 block text-xs text-muted">{fact?.directionLabel ?? `${edge.source} → ${edge.target}`} · {other?.label ?? otherId}</span>
+                      {fact?.count != null ? <span className="num mt-1 block text-xs">{fact.count} rows · {fact.currency} {fact.cad == null ? "—" : money(fact.cad)}</span> : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {selectedEdge && facts[selectedEdge] ? <EdgeInspector fact={facts[selectedEdge]} /> : null}
           </article>
         ) : (
-          <p className="text-sm text-muted">Select a node to read it. The highest-residual customers start in view, with their neighbours lit.</p>
+          <p className="text-sm text-muted">Select a node. Fill is the entity type. The ring is stored risk. Edges point in the stored direction.</p>
         )}
         <p className="text-xs leading-relaxed text-muted">{disclaimer}</p>
       </div>
-      <div className="overflow-hidden rounded-3xl border border-line bg-[#071410] text-[#e7f0ec] shadow-[0_24px_70px_rgba(0,0,0,0.25)]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
-          <p className="text-xs text-[#b7c7bf]">{clustered ? `${drawnNodes.length} clusters` : `${visibleNodes.length} of ${nodes.length} entities`} in view</p>
+      <div className="overflow-hidden rounded-md border border-line bg-card text-ink">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2">
+          <p className="text-xs text-muted">{clustered ? `${drawnNodes.length} clusters` : `${visibleNodes.length} of ${nodes.length} entities`} in view</p>
           <div className="flex gap-2">
-            <button type="button" className="rounded-full border border-white/15 px-2.5 py-1 text-sm" onClick={() => setCamera((current) => ({ ...current, k: Math.min(2.4, current.k * 1.15) }))} aria-label="Zoom in">+</button>
-            <button type="button" className="rounded-full border border-white/15 px-2.5 py-1 text-sm" onClick={() => setCamera((current) => ({ ...current, k: Math.max(0.35, current.k / 1.15) }))} aria-label="Zoom out">−</button>
-            <button type="button" className="rounded-full border border-white/15 px-2.5 py-1 text-sm" onClick={() => setCamera({ x: 20, y: 12, k: 0.86 })}>Reset</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setCamera((current) => ({ ...current, k: Math.min(2.4, current.k * 1.15) }))} aria-label="Zoom in">+</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setCamera((current) => ({ ...current, k: Math.max(0.35, current.k / 1.15) }))} aria-label="Zoom out">−</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setCamera({ x: 20, y: 12, k: 0.86 })}>Reset</button>
           </div>
         </div>
         {drawnNodes.length === 0 ? (
           <div className="flex h-[70vh] min-h-[520px] items-center justify-center px-6 text-center">
             <div>
               <p className="font-display text-2xl">No entities match these filters</p>
-              <p className="mt-2 text-sm text-[#b7c7bf]">Lower the risk floor or turn a type back on.</p>
+              <p className="mt-2 text-sm text-muted">Lower the risk floor or turn a type back on.</p>
             </div>
           </div>
         ) : (
@@ -542,7 +588,7 @@ export function KnowledgeGraph({
             ref={surface}
             className="relative h-[70vh] min-h-[520px] cursor-grab touch-none active:cursor-grabbing"
             onPointerDown={(event) => {
-              if ((event.target as HTMLElement).closest("a, button, [data-node]")) return;
+              if ((event.target as Element).closest("a, button, [data-node], [data-edge]")) return;
               drag.current = { x: event.clientX, y: event.clientY, cx: camera.x, cy: camera.y };
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
@@ -560,13 +606,9 @@ export function KnowledgeGraph({
           >
             <svg width="100%" height="100%" role="img" aria-label="Entity graph">
               <defs>
-                <filter id="risk-glow" x="-80%" y="-80%" width="260%" height="260%">
-                  <feGaussianBlur stdDeviation="3.2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
+                <marker id="edge-arrow" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto">
+                  <path d="M0,0 L8,4 L0,8 Z" fill="currentColor" />
+                </marker>
               </defs>
               <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.k})`}>
                 {hulls.map(([kind, box]) => (
@@ -577,10 +619,11 @@ export function KnowledgeGraph({
                       width={Math.max(72, box.maxX - box.minX + 92)}
                       height={Math.max(48, box.maxY - box.minY + 52)}
                       rx="18"
-                      fill="rgba(255,255,255,0.03)"
-                      stroke="rgba(226,196,138,0.28)"
+                      fill="transparent"
+                      stroke="currentColor"
+                      strokeOpacity="0.25"
                     />
-                    <text x={box.minX - 28} y={box.minY - 34} fontSize="11" fill="#e2c48a" letterSpacing="0.12em">
+                    <text x={box.minX - 28} y={box.minY - 34} fontSize="11" fill="currentColor" letterSpacing="0.08em">
                       {kind.toUpperCase()}
                     </text>
                   </g>
@@ -591,15 +634,28 @@ export function KnowledgeGraph({
                   if (!source || !target) return null;
                   const onPath = pathEdges.has([edge.source, edge.target].sort().join("|"));
                   const linked = !ring || ring.has(edge.source) || ring.has(edge.target) || onPath;
+                  const observed = relationBasis(edge.relation) === "observed";
+                  const chosen = edge.id === selectedEdge;
                   return (
                     <path
                       key={edge.id}
+                      data-edge="true"
                       d={curve(source, target)}
                       fill="none"
-                      stroke={onPath ? "#e06b76" : "#9ad7c4"}
-                      strokeOpacity={onPath ? 0.95 : linked ? 0.35 : 0.05}
-                      strokeWidth={onPath ? 2.6 : 1}
-                    />
+                      stroke={onPath ? "#8f2d2d" : chosen ? "#1d4e89" : observed ? "#1d4e89" : "#8a5a12"}
+                      strokeOpacity={onPath || chosen ? 0.95 : linked ? 0.55 : 0.08}
+                      strokeWidth={onPath || chosen ? 2.4 : 1.1}
+                      strokeDasharray={observed ? undefined : "4 3"}
+                      markerEnd="url(#edge-arrow)"
+                      className="cursor-pointer"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedEdge(edge.id);
+                        setSelected(edge.source);
+                      }}
+                    >
+                      <title>{`${edge.relation} · ${observed ? "observed" : "derived"} · ${facts[edge.id]?.count ?? "no"} rows`}</title>
+                    </path>
                   );
                 })}
                 {drawnNodes.map((node) => {
@@ -630,12 +686,11 @@ export function KnowledgeGraph({
                       onMouseLeave={() => setHovered((current) => (current === node.id ? null : current))}
                     >
                       <circle
-                        r={clustered ? 18 + Math.min(16, (node.risk ?? 0) / 8) : active ? 12 : (node.risk ?? 0) >= 75 ? 10 : 7}
-                        fill={riskColor(node.risk)}
-                        filter={(node.risk ?? 0) >= 75 || active ? "url(#risk-glow)" : undefined}
-                        stroke={pathSet.has(node.id) || isSanction(node) ? "#e2c48a" : "transparent"}
-                        strokeWidth={isSanction(node) ? 2.4 : 2}
-                        strokeDasharray={isSanction(node) && !pathSet.has(node.id) ? "2 2" : undefined}
+                        r={clustered ? 16 : active ? 11 : node.kind === "customer" ? 8 : 6}
+                        fill={KIND_FILL[node.kind] ?? "#5c6b7a"}
+                        stroke={riskColor(node.risk)}
+                        strokeWidth={active || (node.risk ?? 0) >= 75 ? 3 : 1.5}
+                        strokeDasharray={isSanction(node) ? "2 2" : undefined}
                       />
                       {showLabel ? (
                         <text x={clustered ? 0 : 14} y={clustered ? 32 : 4} fontSize="11" fill="currentColor" textAnchor={clustered ? "middle" : "start"}>
@@ -650,14 +705,41 @@ export function KnowledgeGraph({
             </svg>
           </div>
         )}
-        <ul className="flex flex-wrap gap-3 border-t border-white/10 px-3 py-2 text-xs text-[#b7c7bf]" aria-label="Risk legend">
-          <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#3dbea0]" /> Under 25</li>
-          <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#e2c48a]" /> 25–49</li>
-          <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#e39a55]" /> 50–74</li>
-          <li><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#e06b76]" /> 75 and above</li>
-          <li><i className="mr-1 inline-block h-2 w-2 rounded-full border border-[#e2c48a]" /> Sanctions node</li>
+        <ul className="flex flex-wrap gap-3 border-t border-line px-3 py-2 text-xs text-muted" aria-label="Graph legend">
+          <li><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: KIND_FILL.customer }} /> Customer</li>
+          <li><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: KIND_FILL.alert }} /> Alert</li>
+          <li><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: KIND_FILL.wallet }} /> Wallet</li>
+          <li><i className="mr-1 inline-block h-2 w-4 border-t-2 border-info" /> Observed, solid</li>
+          <li><i className="mr-1 inline-block h-2 w-4 border-t-2 border-dashed border-brass" /> Derived, dashed</li>
+          <li>Ring colour is stored risk, not a glow</li>
         </ul>
       </div>
+    </div>
+  );
+}
+
+function EdgeInspector({ fact }: { fact: EdgeFact }) {
+  return (
+    <div className="mt-3 border-t border-line pt-3 text-sm">
+      <p className="font-semibold">{fact.meaning}</p>
+      <p className="mt-1 text-muted">{fact.directionLabel}. {fact.basis === "observed" ? "Tied to ledger rows." : "Not a payment."}</p>
+      {fact.count != null ? (
+        <p className="num mt-2">
+          {fact.count} transaction{fact.count === 1 ? "" : "s"}
+          {fact.cad != null ? ` · ${money(fact.cad)} ${fact.currency}` : ""}
+          {fact.assets.length ? ` · ${fact.assets.join(", ")}` : ""}
+        </p>
+      ) : null}
+      {fact.windowStart ? <p className="mt-1 text-xs text-muted">{when(fact.windowStart)} → {when(fact.windowEnd)}</p> : null}
+      <ul className="mt-2 space-y-1">
+        {fact.samples.map((sample) => (
+          <li key={sample.id}>
+            <Link href={`/transactions/${sample.id}`} className="text-info underline">{sample.ref}</Link>
+            <span className="num text-xs text-muted"> · {sample.direction} · {money(sample.cad)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs leading-5 text-muted">{fact.note}</p>
     </div>
   );
 }

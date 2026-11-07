@@ -55,8 +55,30 @@ def test_correlation_of_a_straight_line_is_one():
             "c": [5, 4, 3, 2, 1],
         }
     )
+    assert matrix["method"] == "pearson"
+    assert matrix["n"] == 5
     assert abs(matrix["matrix"][0][1] - 1) < 1e-9
     assert matrix["matrix"][0][2] < -0.99
+
+
+def test_constant_or_short_series_have_no_pearson_value():
+    matrix = correlation_matrix({"flat": [4, 4, 4, 4], "rising": [1, 2, 3, 4], "short": [1]})
+    assert matrix["matrix"][0][1] is None
+    assert matrix["matrix"][0][0] is None
+    assert matrix["matrix"][2][1] is None
+
+
+def test_thresholds_change_classification_on_a_fixture():
+    """Planted labels on a fixed score fixture. Not a production validation set."""
+    scores = [0.15, 0.42, 0.58, 0.73, 0.91]
+    labels = [0, 0, 1, 1, 0]
+    loose = metrics_at_threshold(scores, labels, 0.40)
+    tight = metrics_at_threshold(scores, labels, 0.80)
+    assert (loose["tp"], loose["fp"], loose["tn"], loose["fn"]) == (2, 2, 1, 0)
+    assert (tight["tp"], tight["fp"], tight["tn"], tight["fn"]) == (0, 1, 2, 2)
+    assert loose["recall"] == 1
+    assert tight["recall"] == 0
+    assert tight["false_positive_rate"] != loose["false_positive_rate"]
 
 
 def test_decomposition_separates_a_weekly_season():

@@ -34,7 +34,7 @@ export function MapStage({ countries }: { countries: MapCountry[] }) {
                 aria-selected={selected}
                 aria-controls={`map-panel-${value}`}
                 onClick={() => setMode(value)}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold ${selected ? "bg-spruce text-white shadow-[0_0_18px_rgba(226,196,138,0.35)]" : "text-muted"}`}
+                className={`rounded-md px-4 py-1.5 text-sm font-semibold ${selected ? "bg-spruce text-white" : "text-muted"}`}
               >
                 {label}
               </button>

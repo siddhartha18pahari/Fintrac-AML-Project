@@ -6,7 +6,6 @@ import { CHART } from "@/components/chartTheme";
 type Flow = { label: string; value: number; tone: string };
 
 export function FundSankey({ incoming, outgoing }: { incoming: Flow[]; outgoing: Flow[] }) {
-  const glowId = useId().replace(/:/g, "");
   const width = 720;
   const height = 280;
   const inTotal = incoming.reduce((sum, row) => sum + row.value, 0) || 1;
@@ -32,15 +31,6 @@ export function FundSankey({ incoming, outgoing }: { incoming: Flow[]; outgoing:
     <figure>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" className="h-64 w-full" aria-labelledby="sankey-title">
         <title id="sankey-title">Value flowing in by rail and leaving by rail</title>
-        <defs>
-          <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
         <text x="8" y="14" fontSize="11" fill="currentColor" opacity="0.6">In</text>
         <text x={width - 28} y="14" fontSize="11" fill="currentColor" opacity="0.6">Out</text>
         {left.map((row) => (
@@ -50,8 +40,7 @@ export function FundSankey({ incoming, outgoing }: { incoming: Flow[]; outgoing:
             stroke={row.tone}
             strokeWidth={Math.max(2, row.h * 0.45)}
             fill="none"
-            opacity="0.55"
-            filter={`url(#${glowId})`}
+            opacity="0.8"
           />
         ))}
         {right.map((row) => (
@@ -61,8 +50,7 @@ export function FundSankey({ incoming, outgoing }: { incoming: Flow[]; outgoing:
             stroke={row.tone}
             strokeWidth={Math.max(2, row.h * 0.45)}
             fill="none"
-            opacity="0.55"
-            filter={`url(#${glowId})`}
+            opacity="0.8"
           />
         ))}
         {left.map((row) => (

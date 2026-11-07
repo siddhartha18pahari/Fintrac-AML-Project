@@ -31,11 +31,11 @@ export default async function CustomersPage({
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3" role="search">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Search</span>
-          <input name="q" defaultValue={q ?? ""} placeholder="Name, reference, city" className="rounded-md border border-line bg-white px-3 py-2" />
+          <input name="q" defaultValue={q ?? ""} placeholder="Name, reference, city" className="field" />
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Sort</span>
-          <select name="sort" defaultValue={sort ?? "residual"} className="rounded-md border border-line bg-white px-3 py-2">
+          <select name="sort" defaultValue={sort ?? "residual"} className="field">
             <option value="residual">Residual risk</option>
             <option value="inherent">Inherent risk</option>
             <option value="name">Name</option>

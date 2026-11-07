@@ -3,6 +3,7 @@ import { AlertTable } from "@/components/AlertTable";
 import { PageIntro, Shell } from "@/components/Shell";
 import { formatValue, observedEntries } from "@/lib/format";
 import { filterAlerts, ruleOptions } from "@/lib/queries";
+import { queuePath } from "@/lib/return-to";
 
 export const metadata: Metadata = { title: "Alerts" };
 
@@ -12,6 +13,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
   const filters = await searchParams;
   const rows = filterAlerts(filters);
   const rules = ruleOptions();
+  const queue = queuePath(filters);
 
   return (
     <Shell>
@@ -55,6 +57,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
       </form>
       <p className="mb-3 text-sm text-muted">{rows.length} alert{rows.length === 1 ? "" : "s"}</p>
       <AlertTable
+        queue={queue}
         rows={rows.map((alert) => ({
           id: alert.id,
           title: alert.title,
