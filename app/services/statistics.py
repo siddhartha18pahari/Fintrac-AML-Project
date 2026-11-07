@@ -226,25 +226,39 @@ def gaussian_kde(values: list[float], points: int = 40) -> dict:
     return {"bandwidth": bandwidth, "grid": grid, "density": density}
 
 
-def pearson(left: list[float], right: list[float]) -> float:
-    if len(left) != len(right) or len(left) < 2:
-        return 0.0
-    mean_left = mean(left)
-    mean_right = mean(right)
-    numerator = sum((a - mean_left) * (b - mean_right) for a, b in zip(left, right))
-    left_scale = math.sqrt(sum((a - mean_left) ** 2 for a in left))
-    right_scale = math.sqrt(sum((b - mean_right) ** 2 for b in right))
+def pearson(left: list[float], right: list[float]) -> float | None:
+    """Pearson r on finite pairs. None when a series is constant, missing, or shorter than 2."""
+    if len(left) != len(right):
+        return None
+    pairs = [
+        (float(a), float(b))
+        for a, b in zip(left, right)
+        if a is not None and b is not None and math.isfinite(a) and math.isfinite(b)
+    ]
+    if len(pairs) < 2:
+        return None
+    mean_left = sum(pair[0] for pair in pairs) / len(pairs)
+    mean_right = sum(pair[1] for pair in pairs) / len(pairs)
+    numerator = sum((a - mean_left) * (b - mean_right) for a, b in pairs)
+    left_scale = math.sqrt(sum((a - mean_left) ** 2 for a, _ in pairs))
+    right_scale = math.sqrt(sum((b - mean_right) ** 2 for _, b in pairs))
     if left_scale == 0 or right_scale == 0:
-        return 0.0
+        return None
     return numerator / (left_scale * right_scale)
 
 
 def correlation_matrix(columns: dict[str, list[float]]) -> dict:
     names = list(columns)
+    lengths = [len(values) for values in columns.values()]
     matrix = []
     for row_name in names:
         matrix.append([pearson(columns[row_name], columns[column_name]) for column_name in names])
-    return {"names": names, "matrix": matrix}
+    return {
+        "names": names,
+        "matrix": matrix,
+        "n": min(lengths) if lengths else 0,
+        "method": "pearson",
+    }
 
 
 def decompose(series: list[float], period: int = 7) -> dict:

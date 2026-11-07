@@ -4,21 +4,25 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { KnowledgeGraph, type GraphEdge, type GraphNode } from "@/components/KnowledgeGraph";
 import { KnowledgeGraph3D } from "@/components/KnowledgeGraph3D";
+import type { EdgeFact } from "@/lib/graph-evidence";
 
 export function GraphStudio({
   nodes,
   edges,
   disclaimer,
   alertTimes,
+  facts,
 }: {
   nodes: GraphNode[];
   edges: GraphEdge[];
   disclaimer: string;
   alertTimes: Record<string, string>;
+  facts: Record<string, EdgeFact>;
 }) {
   const params = useSearchParams();
   const initial = params.get("view");
-  const [view, setView] = useState<"pyvis" | "explore" | "orbit">(initial === "explore" ? "explore" : initial === "orbit" ? "orbit" : "pyvis");
+  const focus = params.get("focus");
+  const [view, setView] = useState<"pyvis" | "explore" | "orbit">(initial === "explore" || (!initial && focus) ? "explore" : initial === "orbit" ? "orbit" : "pyvis");
 
   return (
     <div>
@@ -57,7 +61,7 @@ export function GraphStudio({
             ? "Self-contained HTML from scripts/build_pyvis_graph.py. Shapes follow entity type, halos follow risk, edges follow the relation."
             : view === "orbit"
               ? "WebGL ego network. Glyphs are entity types, halos are risk, and particles run along a path you pick."
-              : "In-app graph. Cluster by type, search to focus, dim the rest of the neighbourhood, filter risk and type, or trace a path to a sanctions node."}
+              : "In-app graph. Solid edges are observed ledger links. Dashed edges are catalogue or case links. Select one to read the amount, count, window and sample transactions."}
         </p>
       </div>
       {view === "orbit" ? <KnowledgeGraph3D nodes={nodes} edges={edges} alertTimes={alertTimes} /> : null}
@@ -65,10 +69,10 @@ export function GraphStudio({
         <iframe
           title="PyVis entity graph"
           src="/graph/entity-graph.html"
-          className="h-[min(82vh,920px)] w-full rounded-3xl border border-white/10 bg-[#071410] shadow-[0_24px_80px_rgba(0,0,0,0.28)]"
+          className="h-[min(82vh,920px)] w-full rounded-md border border-line bg-card"
         />
       ) : null}
-      {view === "explore" ? <KnowledgeGraph nodes={nodes} edges={edges} disclaimer={disclaimer} /> : null}
+      {view === "explore" ? <KnowledgeGraph nodes={nodes} edges={edges} disclaimer={disclaimer} facts={facts} focusId={focus} /> : null}
     </div>
   );
 }

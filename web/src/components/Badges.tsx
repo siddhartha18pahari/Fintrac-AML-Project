@@ -12,9 +12,8 @@ const TIER: Record<string, string> = {
 export function Badge({ value, tone }: { value: string; tone?: string }) {
   const key = (tone ?? value).toUpperCase();
   const cls = TIER[key] ?? TIER.INFO;
-  const pulse = key === "CRITICAL" || key === "HIGH" ? "risk-pulse" : "";
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide ${cls} ${pulse}`}>
+    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tracking-wide ${cls}`}>
       {titleCase(value)}
     </span>
   );

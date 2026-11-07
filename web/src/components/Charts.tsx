@@ -1,36 +1,14 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useState } from "react";
 import { CHART } from "@/components/chartTheme";
 import { money } from "@/lib/format";
 
 type Point = { date: string; cash: number; eft: number; virtual_currency: number; total: number };
 
-function useGrow() {
-  const [progress, setProgress] = useState(0);
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setProgress(1);
-      return;
-    }
-    const start = performance.now();
-    let frame = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / 780);
-      setProgress(1 - (1 - t) ** 3);
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, []);
-  return progress;
-}
-
 export function VolumeChart({ series }: { series: Point[] }) {
   const [active, setActive] = useState<number | null>(null);
-  const progress = useGrow();
-  const gradientId = useId().replace(/:/g, "");
+  const progress = 1;
   const max = Math.max(...series.map((row) => row.total), 1);
   const width = 720;
   const height = 220;
@@ -42,26 +20,17 @@ export function VolumeChart({ series }: { series: Point[] }) {
   const selected = active != null ? series[active] : null;
 
   return (
-    <figure>
+    <figure className="overflow-x-auto">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" className="h-56 w-full min-w-[640px]" aria-labelledby="volume-title">
-        <title id="volume-title">Incoming value by day and payment rail</title>
-        <defs>
-          <linearGradient id={`${gradientId}-cash`} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor={CHART.cash} />
-            <stop offset="100%" stopColor={CHART.cashSoft} />
-          </linearGradient>
-          <linearGradient id={`${gradientId}-eft`} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor={CHART.eft} />
-            <stop offset="100%" stopColor={CHART.eftSoft} />
-          </linearGradient>
-          <linearGradient id={`${gradientId}-vc`} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor={CHART.vc} />
-            <stop offset="100%" stopColor={CHART.vcSoft} />
-          </linearGradient>
-        </defs>
+        <title id="volume-title">Incoming value by day and payment rail, CAD</title>
         {[0.25, 0.5, 0.75, 1].map((tick) => {
           const y = padY + innerH - tick * innerH;
-          return <line key={tick} x1={padX} x2={width - padX} y1={y} y2={y} stroke={CHART.grid} strokeDasharray="3 5" />;
+          return (
+            <g key={tick}>
+              <line x1={padX} x2={width - padX} y1={y} y2={y} stroke={CHART.grid} />
+              <text x={padX} y={y - 2} fontSize="10" fill="currentColor" opacity="0.7">{money(max * tick)}</text>
+            </g>
+          );
         })}
         {series.map((row, index) => {
           const x = padX + index * (barW + gap);
@@ -83,10 +52,10 @@ export function VolumeChart({ series }: { series: Point[] }) {
               onBlur={() => setActive(null)}
             >
               <rect x={x} y={padY} width={barW} height={innerH} fill="transparent" />
-              <rect x={x} y={base - vcH - eftH - cashH} width={barW} height={Math.max(0, cashH)} fill={`url(#${gradientId}-cash)`} rx="1.5" />
-              <rect x={x} y={base - vcH - eftH} width={barW} height={Math.max(0, eftH)} fill={`url(#${gradientId}-eft)`} />
-              <rect x={x} y={base - vcH} width={barW} height={Math.max(0, vcH)} fill={`url(#${gradientId}-vc)`} rx="1.5" />
-              {active === index ? <rect x={x - 1} y={padY} width={barW + 2} height={innerH} fill="none" stroke="#e2c48a" strokeWidth="1.2" rx="2" /> : null}
+              <rect x={x} y={base - vcH - eftH - cashH} width={barW} height={Math.max(0, cashH)} fill={CHART.cash} />
+              <rect x={x} y={base - vcH - eftH} width={barW} height={Math.max(0, eftH)} fill={CHART.eft} />
+              <rect x={x} y={base - vcH} width={barW} height={Math.max(0, vcH)} fill={CHART.vc} />
+              {active === index ? <rect x={x - 1} y={padY} width={barW + 2} height={innerH} fill="none" stroke="currentColor" strokeWidth="1.2" /> : null}
               {index % 3 === 0 ? (
                 <text x={x} y={height - 8} fill="currentColor" opacity="0.55" fontSize="10">
                   {row.date.slice(5)}
@@ -119,13 +88,13 @@ export function VolumeChart({ series }: { series: Point[] }) {
       )}
       <figcaption className="mt-3 flex flex-wrap gap-4 text-xs text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <i className="inline-block h-2.5 w-2.5 rounded-sm bg-gradient-to-t from-[#1d684f] to-[#8ef0d2]" /> Virtual currency
+          <i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: CHART.vc }} /> Virtual currency
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <i className="inline-block h-2.5 w-2.5 rounded-sm bg-gradient-to-t from-[#9a5720] to-[#f0c09a]" /> Cash
+          <i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: CHART.cash }} /> Cash
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <i className="inline-block h-2.5 w-2.5 rounded-sm bg-gradient-to-t from-[#1c4f78] to-[#b9d4ee]" /> Electronic transfer
+          <i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: CHART.eft }} /> Electronic transfer
         </span>
       </figcaption>
     </figure>
@@ -135,11 +104,6 @@ export function VolumeChart({ series }: { series: Point[] }) {
 export function RuleBars({ rules }: { rules: { rule_id: string; count: number }[] }) {
   const rows = rules.slice(0, 8);
   const max = Math.max(...rows.map((row) => row.count), 1);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
   return (
     <ul className="space-y-3">
       {rows.map((row) => (
@@ -149,10 +113,7 @@ export function RuleBars({ rules }: { rules: { rule_id: string; count: number }[
             <span className="num text-muted">{row.count}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-line">
-            <div
-              className="h-2 rounded-full bg-gradient-to-r from-[#12352c] to-[#8ef0d2] transition-[width] duration-700 ease-out"
-              style={{ width: ready ? `${(row.count / max) * 100}%` : "0%" }}
-            />
+            <div className="h-2 rounded-full bg-info" style={{ width: `${(row.count / max) * 100}%` }} />
           </div>
         </li>
       ))}
@@ -163,17 +124,12 @@ export function RuleBars({ rules }: { rules: { rule_id: string; count: number }[
 export function TierBars({ tiers, total }: { tiers: Record<string, number>; total: number }) {
   const order = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const;
   const colors: Record<string, string> = {
-    CRITICAL: `linear-gradient(90deg, ${CHART.critical}, ${CHART.criticalSoft})`,
-    HIGH: `linear-gradient(90deg, ${CHART.high}, ${CHART.highSoft})`,
-    MEDIUM: `linear-gradient(90deg, ${CHART.medium}, ${CHART.mediumSoft})`,
-    LOW: `linear-gradient(90deg, ${CHART.low}, ${CHART.lowSoft})`,
+    CRITICAL: CHART.critical,
+    HIGH: CHART.high,
+    MEDIUM: CHART.medium,
+    LOW: CHART.low,
   };
   const population = total || 1;
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
   return (
     <ul className="space-y-3">
       {order.map((tier) => {
@@ -182,10 +138,7 @@ export function TierBars({ tiers, total }: { tiers: Record<string, number>; tota
           <li key={tier} className="grid grid-cols-[92px_1fr_32px] items-center gap-2 text-sm">
             <span>{tier[0] + tier.slice(1).toLowerCase()}</span>
             <div className="h-2.5 overflow-hidden rounded-full bg-line">
-              <div
-                className="h-2.5 rounded-full transition-[width] duration-700 ease-out"
-                style={{ width: ready ? `${(count / population) * 100}%` : "0%", background: colors[tier] }}
-              />
+              <div className="h-2.5 rounded-full" style={{ width: `${(count / population) * 100}%`, background: colors[tier] }} />
             </div>
             <span className="num text-right text-muted">{count}</span>
           </li>

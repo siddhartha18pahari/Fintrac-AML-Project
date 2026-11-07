@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge } from "@/components/Badges";
 import { SlideOver } from "@/components/SlideOver";
 import { when } from "@/lib/format";
+import { withReturn } from "@/lib/return-to";
 
 export type AlertPreview = {
   id: number;
@@ -19,7 +20,7 @@ export type AlertPreview = {
   observed: [string, string][];
 };
 
-export function AlertTable({ rows }: { rows: AlertPreview[] }) {
+export function AlertTable({ rows, queue = "/alerts" }: { rows: AlertPreview[]; queue?: string }) {
   const [active, setActive] = useState<AlertPreview | null>(null);
 
   return (
@@ -47,7 +48,7 @@ export function AlertTable({ rows }: { rows: AlertPreview[] }) {
               rows.map((alert) => (
                 <tr key={alert.id}>
                   <td>
-                    <Link href={`/alerts/${alert.id}`} className="font-semibold hover:underline">
+                    <Link href={withReturn(`/alerts/${alert.id}`, queue)} className="font-semibold hover:underline">
                       {alert.title}
                     </Link>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -96,8 +97,8 @@ export function AlertTable({ rows }: { rows: AlertPreview[] }) {
                 ))}
               </dl>
             ) : null}
-            <Link href={`/alerts/${active.id}`} className="inline-flex rounded-full bg-spruce px-4 py-2 text-sm font-semibold text-white">
-              Open the full record
+            <Link href={withReturn(`/alerts/${active.id}`, queue)} className="btn btn-primary">
+              Explain this alert
             </Link>
           </div>
         ) : null}

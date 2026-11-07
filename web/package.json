@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --experimental-strip-types --test src/lib/statistics.test.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.104",

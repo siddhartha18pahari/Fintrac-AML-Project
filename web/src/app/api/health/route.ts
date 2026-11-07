@@ -9,5 +9,6 @@ export function GET() {
     synthetic: true,
     as_of: data.meta.as_of,
     counts: data.meta.counts,
+    chat: process.env.OPENAI_API_KEY || process.env.AI_GATEWAY_API_KEY ? "model" : "deterministic",
   });
 }

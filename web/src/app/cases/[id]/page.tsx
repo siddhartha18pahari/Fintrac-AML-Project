@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { AssistNote } from "@/components/Assist";
 import { Badge } from "@/components/Badges";
 import { CaseWorkspace, InvestigationCanvas } from "@/components/CaseWorkspace";
 import { PageIntro, Shell } from "@/components/Shell";
 import { Timeline } from "@/components/Timeline";
 import { when } from "@/lib/format";
+import { preservedQueue, safeReturn, withReturn } from "@/lib/return-to";
 import { caseDeadline } from "@/lib/sla";
 import { data } from "@/lib/snapshot";
 
@@ -17,10 +19,19 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   return { title: row?.reference ?? "Case" };
 }
 
-export default async function CasePage({ params }: { params: Promise<Params> }) {
+export default async function CasePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams: Promise<{ return?: string }>;
+}) {
   const { id } = await params;
+  const query = await searchParams;
   const row = data.cases.find((item) => item.id === Number(id));
   if (!row) notFound();
+  const back = safeReturn(query.return, "/alerts");
+  const queue = preservedQueue(query.return);
   const alerts = data.alerts.filter((alert) => alert.case_id === row.id);
   const report = data.reports.find((item) => item.case_id === row.id);
   const filing = data.filings.find((item) => item.case_id === row.id);
@@ -50,10 +61,19 @@ export default async function CasePage({ params }: { params: Promise<Params> }) 
   return (
     <Shell wide>
       <PageIntro
-        kicker={row.reference}
+        kicker={`6 · ${row.reference}`}
         title={row.customer_name ?? "Case"}
-        lede="The score and the evidence come from the detection run. Assignment, the canvas, notes, attachments and the four-eyes decision stay on this machine."
+        lede="The score and the evidence come from the detection run. Notes, the canvas and the four-eyes decision stay in this browser. Approval here does not authenticate a person and does not file."
       />
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link href={back} className="btn btn-secondary">Back</Link>
+        <Link href={queue} className="btn btn-secondary">Alert queue</Link>
+        <Link href="/cases" className="btn btn-secondary">All cases</Link>
+        {alerts[0] ? <Link href={withReturn(`/alerts/${alerts[0].id}`, `/cases/${row.id}`)} className="btn btn-primary">Explain this alert</Link> : null}
+      </div>
+      <AssistNote title="Working a case">
+        Read why it is open, open the linked alert, and write a note that cites a transaction or a rule version. Requesting approval only changes the local draft. Switch the actor to record a second review. That switch is a label, not a login.
+      </AssistNote>
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <Badge value={row.risk_tier} />
         <Badge value={row.priority} tone={row.priority === "URGENT" ? "CRITICAL" : "INFO"} />
