@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test src/lib/statistics.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/statistics.test.ts src/lib/desk.test.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.104",
@@ -20,6 +20,7 @@
     "graphology-communities-louvain": "^2.0.2",
     "graphology-metrics": "^2.4.2",
     "next": "^15.5.4",
+    "pg": "^8.23.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-force-graph-2d": "^1.29.2",
@@ -33,6 +34,7 @@
     "@tailwindcss/postcss": "^4.1.11",
     "@types/d3-geo": "^3.1.1",
     "@types/node": "^22.15.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@types/three": "^0.180.0",

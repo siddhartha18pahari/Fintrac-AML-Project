@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageIntro, Shell } from "@/components/Shell";
+import { snapshotDiagnostics } from "@/lib/data-quality";
 import { data } from "@/lib/snapshot";
 
 export const metadata: Metadata = { title: "Quality" };
@@ -8,6 +9,7 @@ export default function PerformancePage() {
   const quality = data.performance;
   const recall = quality.recall == null ? "—" : `${Math.round(quality.recall * 100)}%`;
   const planted = quality.anomaly.planted_alert_customers;
+  const diagnostics = snapshotDiagnostics();
   const other = quality.anomaly.other_customers;
 
   return (
@@ -17,6 +19,15 @@ export default function PerformancePage() {
         title="What the planted book can and cannot say"
         lede={quality.disclaimer}
       />
+      <section className="panel mb-6 p-4 text-sm leading-6">
+        <h2 className="text-base font-semibold">Snapshot diagnostics</h2>
+        <p className="mt-2 text-muted">{diagnostics.note}</p>
+        <dl className="mt-3 grid gap-2 sm:grid-cols-3">
+          <div><dt className="text-muted">Duplicate transaction ids</dt><dd className="num">{diagnostics.duplicateTransactions}</dd></div>
+          <div><dt className="text-muted">Missing CAD</dt><dd className="num">{diagnostics.missingCad}</dd></div>
+          <div><dt className="text-muted">Alerts with missing evidence</dt><dd className="num">{diagnostics.alertsWithMissingEvidence}</dd></div>
+        </dl>
+      </section>
       <section className="grid gap-3 sm:grid-cols-4">
         {[
           ["Planted indicators", quality.planted_indicators],

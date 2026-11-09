@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { AssistNote } from "@/components/Assist";
 import { Badge } from "@/components/Badges";
-import { CaseWorkspace, InvestigationCanvas } from "@/components/CaseWorkspace";
+import { CaseStoreNote, CaseWorkspace, InvestigationCanvas } from "@/components/CaseWorkspace";
 import { PageIntro, Shell } from "@/components/Shell";
 import { Timeline } from "@/components/Timeline";
 import { when } from "@/lib/format";
@@ -83,6 +83,7 @@ export default async function CasePage({
         {report ? <Link href={`/reports/${row.id}`} className="text-sm text-info underline">STR narrative</Link> : null}
         {filing ? <Link href={`/filings/${filing.id}`} className="text-sm text-info underline">Draft filing</Link> : null}
       </div>
+      <CaseStoreNote caseId={row.id} />
       <div className="mb-4">
         <InvestigationCanvas namespace={namespace} caseId={row.id} status={row.status} disposition={row.disposition} seeds={seeds} />
       </div>

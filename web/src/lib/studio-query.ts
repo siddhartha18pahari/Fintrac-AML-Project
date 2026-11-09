@@ -1,4 +1,5 @@
 import { shortestPath } from "@/lib/bm25";
+import { relationBasis } from "@/lib/graph-evidence";
 import { simulateBook, type SimControls } from "@/lib/simulator-engine";
 import { data } from "@/lib/snapshot";
 import { benfordTest, mean } from "@/lib/statistics";
@@ -173,7 +174,14 @@ export function graphQuery(input: { source?: string; target?: string; ego?: stri
     const end = resolveNode(input.target);
     if (!start || !end) return { found: false, reason: "One or both names are not on the knowledge graph.", path: [] };
     const path = shortestPath(data.knowledge_graph.edges, start, end);
-    return { found: Boolean(path), path: (path ?? []).map(publicNode), hops: path ? path.length - 1 : null };
+    const steps = (path ?? []).slice(0, -1).map((source, index) => {
+      const target = path![index + 1];
+      const edge = data.knowledge_graph.edges.find(
+        (item) => (item.source === source && item.target === target) || (item.source === target && item.target === source),
+      );
+      return { relation: edge?.relation ?? "unknown", basis: relationBasis(edge?.relation ?? "") };
+    });
+    return { found: Boolean(path), path: (path ?? []).map(publicNode), hops: path ? path.length - 1 : null, steps };
   }
   let focus = resolveNode(input.ego || input.source || "");
   if (!focus) {

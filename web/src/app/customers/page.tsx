@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Badge } from "@/components/Badges";
 import { PageIntro, Shell } from "@/components/Shell";
+import { listHref, Pager } from "@/components/Pager";
 import { money } from "@/lib/format";
+import { pageWindow, slicePage } from "@/lib/page";
 import { sortCustomers } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Customers" };
@@ -10,9 +12,9 @@ export const metadata: Metadata = { title: "Customers" };
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; q?: string; province?: string }>;
+  searchParams: Promise<{ sort?: string; q?: string; province?: string; page?: string }>;
 }) {
-  const { sort, q, province } = await searchParams;
+  const { sort, q, province, page } = await searchParams;
   const query = (q ?? "").trim().toLowerCase();
   const provinceCode = (province ?? "").trim().toUpperCase();
   const rows = sortCustomers(sort).filter((row) => {
@@ -20,6 +22,7 @@ export default async function CustomersPage({
     if (!query) return true;
     return `${row.name} ${row.customer_id} ${row.occupation_or_business} ${row.profile.city ?? ""}`.toLowerCase().includes(query);
   });
+  const paged = slicePage(rows, pageWindow({ page }));
 
   return (
     <Shell>
@@ -57,7 +60,7 @@ export default async function CustomersPage({
             </tr>
           </thead>
           <tbody>
-            {rows.map((customer) => (
+            {paged.items.map((customer) => (
               <tr key={customer.id} className="border-b border-line last:border-0">
                 <td className="px-4 py-3">
                   <Link href={`/customers/${customer.id}`} className="font-semibold hover:underline">{customer.name}</Link>
@@ -78,6 +81,7 @@ export default async function CustomersPage({
           </tbody>
         </table>
       </div>
+      <Pager page={paged.page} pages={paged.pages} total={paged.total} hrefFor={(next) => listHref("/customers", { q, sort, province }, next)} />
     </Shell>
   );
 }

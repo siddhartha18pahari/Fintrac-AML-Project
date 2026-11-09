@@ -242,6 +242,11 @@ html.dark .btn-primary {
   filter: brightness(0.97);
 }
 
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .btn[aria-pressed="true"] {
   border-color: var(--color-accent);
   background: var(--color-selected);

@@ -152,13 +152,13 @@ export function KnowledgeGraph3D({
       ) : pathEnd ? (
         <p className="mb-3 text-sm text-muted">No path inside this ego network. Widen the hop count.</p>
       ) : null}
-      <div className="relative h-[720px] overflow-hidden rounded-3xl border border-white/10 bg-[#071410]">
-        {failed ? <p className="p-6 text-sm text-[#d7e4de]">{failed}</p> : null}
-        {!failed && !Graph ? <p className="p-6 text-sm text-[#d7e4de]">Starting the 3D layout…</p> : null}
+      <div className="relative h-[720px] overflow-hidden rounded-md border border-line bg-card">
+        {failed ? <p className="p-6 text-sm text-muted">{failed}</p> : null}
+        {!failed && !Graph ? <p className="p-6 text-sm text-muted">Starting the 3D layout…</p> : null}
         {Graph ? (
           <Graph
             graphData={view.graphData}
-            backgroundColor="#071410"
+            backgroundColor="transparent"
             showNavInfo={false}
             nodeLabel={(node: GraphNode) => `${node.kind}: ${node.label ?? node.id}`}
             nodeColor={(node: GraphNode) => riskColor(node.risk)}
@@ -175,8 +175,17 @@ export function KnowledgeGraph3D({
           />
         ) : null}
       </div>
-      <p className="mt-3 text-xs text-muted">
-        Glyphs mark entity type. The halo is residual risk. Animated particles run only on the selected path.
+      <ul className="mt-3 flex flex-wrap gap-3 text-xs text-muted" aria-label="3D legend">
+        <li>C customer</li>
+        <li>W wallet</li>
+        <li>! alert</li>
+        <li>R rule</li>
+        <li>K case</li>
+        <li>Colour is stored risk</li>
+        <li>Particles mark a selected path only</li>
+      </ul>
+      <p className="mt-2 text-xs text-muted">
+        The 3D view does not sum Canadian dollars. Use Explore or the trace form for observed amounts versus derived links.
         {startId.startsWith("customer:") ? (
           <>
             {" "}

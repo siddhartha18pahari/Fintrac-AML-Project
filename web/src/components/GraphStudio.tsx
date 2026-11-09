@@ -58,10 +58,10 @@ export function GraphStudio({
         </div>
         <p className="max-w-xl text-xs leading-relaxed text-muted">
           {view === "pyvis"
-            ? "Self-contained HTML from scripts/build_pyvis_graph.py. Shapes follow entity type, halos follow risk, edges follow the relation."
+            ? "PyVis is the bundled physics HTML. Shapes are entity types. A halo is stored risk, not a payment. Open Explore to read whether an edge is an observed ledger row or a derived case, alert, or catalogue link."
             : view === "orbit"
-              ? "WebGL ego network. Glyphs are entity types, halos are risk, and particles run along a path you pick."
-              : "In-app graph. Solid edges are observed ledger links. Dashed edges are catalogue or case links. Select one to read the amount, count, window and sample transactions."}
+              ? "3D shows one neighbourhood. Letters are entity types. Colour is stored risk. A path here is a connection to inspect. Amounts and observed-versus-derived notes are on Explore and in the trace above."
+              : "Explore. Solid edges were seen on a transaction. Dashed edges are derived. Select one for the count, CAD, window, and sample rows."}
         </p>
       </div>
       {view === "orbit" ? <KnowledgeGraph3D nodes={nodes} edges={edges} alertTimes={alertTimes} /> : null}

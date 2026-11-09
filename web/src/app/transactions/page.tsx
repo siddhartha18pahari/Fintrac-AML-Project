@@ -1,18 +1,21 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { InstrumentTag } from "@/components/Badges";
+import { listHref, Pager } from "@/components/Pager";
 import { PageIntro, Shell } from "@/components/Shell";
 import { money, shortAddress, when } from "@/lib/format";
+import { pageWindow, slicePage } from "@/lib/page";
 import type { TransactionRow } from "@/lib/snapshot";
 import { filterTransactions } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Transactions" };
 
-type Search = { q?: string; instrument?: string; direction?: string; min?: string };
+type Search = { q?: string; instrument?: string; direction?: string; min?: string; page?: string };
 
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const filters = await searchParams;
   const rows = filterTransactions(filters).slice().reverse();
+  const paged = slicePage(rows, pageWindow({ page: filters.page }));
 
   function counterparty(txn: TransactionRow) {
     const wallet = txn.direction === "INCOMING" ? txn.wallet_from : txn.wallet_to;
@@ -34,11 +37,11 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       <form method="get" className="mb-4 grid gap-3 rounded-2xl border border-line bg-card p-4 md:grid-cols-[1fr_180px_160px_120px_auto]" role="search">
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Search</span>
-          <input name="q" defaultValue={filters.q ?? ""} placeholder="Name, reference, asset, address" className="w-full rounded-md border border-line bg-white px-3 py-2" />
+          <input name="q" defaultValue={filters.q ?? ""} placeholder="Name, reference, asset, address" className="field" />
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Rail</span>
-          <select name="instrument" defaultValue={filters.instrument ?? ""} className="w-full rounded-md border border-line bg-white px-3 py-2">
+          <select name="instrument" defaultValue={filters.instrument ?? ""} className="field">
             <option value="">Any</option>
             <option value="VIRTUAL_CURRENCY">Virtual currency</option>
             <option value="CASH">Cash</option>
@@ -47,7 +50,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Direction</span>
-          <select name="direction" defaultValue={filters.direction ?? ""} className="w-full rounded-md border border-line bg-white px-3 py-2">
+          <select name="direction" defaultValue={filters.direction ?? ""} className="field">
             <option value="">Any</option>
             <option value="INCOMING">Incoming</option>
             <option value="OUTGOING">Outgoing</option>
@@ -55,13 +58,16 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted">Min CAD</span>
-          <input name="min" inputMode="decimal" defaultValue={filters.min ?? ""} placeholder="10000" className="w-full rounded-md border border-line bg-white px-3 py-2" />
+          <input name="min" inputMode="decimal" defaultValue={filters.min ?? ""} placeholder="10000" className="field" />
         </label>
         <div className="flex items-end">
           <button type="submit" className="rounded-md bg-spruce px-4 py-2 text-sm font-semibold text-white">Apply</button>
         </div>
       </form>
-      <p className="mb-3 text-sm text-muted">{rows.length} transaction{rows.length === 1 ? "" : "s"}</p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+        <p className="text-muted">{paged.total} transaction{paged.total === 1 ? "" : "s"} in the filtered ledger.</p>
+        <a className="btn btn-secondary" href={`/api/transactions?format=csv${filters.q ? `&q=${encodeURIComponent(filters.q)}` : ""}${filters.instrument ? `&instrument=${encodeURIComponent(filters.instrument)}` : ""}${filters.direction ? `&direction=${encodeURIComponent(filters.direction)}` : ""}${filters.min ? `&min=${encodeURIComponent(filters.min)}` : ""}`}>Export CSV</a>
+      </div>
       <div className="overflow-x-auto rounded-2xl border border-line bg-card">
         <table className="min-w-full text-left text-sm">
           <caption className="sr-only">Filtered transactions</caption>
@@ -78,7 +84,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           <tbody>
             {rows.length === 0 ? (
               <tr><td colSpan={6} className="px-4 py-8 text-muted">No transactions match these filters.</td></tr>
-            ) : rows.map((txn) => (
+            ) : paged.items.map((txn) => (
               <tr key={txn.id} className="border-b border-line last:border-0">
                 <td className="num whitespace-nowrap px-4 py-3">{when(txn.occurred_at)}</td>
                 <td className="px-4 py-3">
@@ -94,6 +100,12 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           </tbody>
         </table>
       </div>
+      <Pager
+        page={paged.page}
+        pages={paged.pages}
+        total={paged.total}
+        hrefFor={(page) => listHref("/transactions", { q: filters.q, instrument: filters.instrument, direction: filters.direction, min: filters.min }, page)}
+      />
     </Shell>
   );
 }
