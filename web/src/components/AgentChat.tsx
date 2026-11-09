@@ -135,7 +135,9 @@ export function AgentChat() {
           ) : null}
           {turns.map((turn) => (
             <article key={turn.id} className={turn.role === "user" ? "ml-8 rounded-2xl bg-spruce px-4 py-3 text-white" : "mr-4 rounded-2xl border border-line bg-card/80 px-4 py-3"}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brass">{turn.role === "user" ? "You" : turn.mode ? `Copilot · ${turn.mode}` : "Copilot"}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+                {turn.role === "user" ? "You" : turn.mode === "langchain" ? "Model, from tool results" : turn.mode === "deterministic" ? "Tool assembly, no model" : "Copilot"}
+              </p>
               <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{turn.content || (pending ? "Working…" : "")}</p>
               {turn.traces?.length ? (
                 <details className="mt-3 text-xs" open>

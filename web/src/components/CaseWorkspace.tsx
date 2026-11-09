@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/Badges";
 import { SlideOver } from "@/components/SlideOver";
 import { StatusRail, Timeline } from "@/components/Timeline";
@@ -122,6 +122,26 @@ export function CaseIndex({ namespace, cases }: { namespace: string; cases: Case
   );
 }
 
+export function CaseStoreNote({ caseId }: { caseId: number }) {
+  const [text, setText] = useState("Checking whether a durable case store is configured.");
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/cases/${caseId}/workspace`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { persistence?: string; reason?: string } | null) => {
+        if (cancelled || !body) return;
+        setText(body.reason || (body.persistence === "postgres" ? "Stored in Postgres." : "Demo mode. This working file stays in the browser."));
+      })
+      .catch(() => {
+        if (!cancelled) setText("Demo mode. The case store could not be reached, so this working file stays in the browser.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [caseId]);
+  return <p className="mb-4 rounded-md border border-line bg-card px-3 py-2 text-sm text-muted">{text} Nothing here submits a report.</p>;
+}
+
 export function CaseWorkspace({
   namespace,
   caseId,
@@ -137,7 +157,7 @@ export function CaseWorkspace({
   asOf?: string;
   deadline?: string;
 }) {
-  const workspace = useWorkspace(namespace);
+  const workspace = useWorkspace(namespace, caseId);
   const overlay = workspace.overlayFor(caseId, status, disposition);
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
@@ -164,8 +184,13 @@ export function CaseWorkspace({
           <p className="mt-1 text-xs text-muted">Measured from the snapshot clock, so a refresh does not age the case.</p>
         </div>
       ) : null}
-      <p className="text-sm text-muted">
-        Assignment, notes, evidence and the four-eyes decision stay in this browser under the snapshot key. They do not submit a report, do not change the detection snapshot, and do not prove who is at the keyboard.
+      <p className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-muted">
+        {workspace.persistence === "postgres"
+          ? workspace.persistenceReason
+          : workspace.persistence === "demo-browser"
+            ? workspace.persistenceReason || "Demo mode. Notes, evidence and the four-eyes labels stay in this browser. They are not durable and the names are not a login."
+            : "Checking whether a durable case store is configured."}
+        {" "}Nothing here submits a report or changes the detection snapshot.
       </p>
       {workspace.notice ? <p className="rounded-xl border border-brass/40 bg-brass/10 px-3 py-2 text-sm" role="status">{workspace.notice}</p> : null}
       <div className="grid gap-3 sm:grid-cols-3">

@@ -88,7 +88,7 @@ export function plan(question: string) {
     calls.push({ name: "compute_stats", args: { metric } });
   }
   const names = mentionedCustomers(question);
-  if (["path", "connect", "between", "linked"].some((word) => lowered.includes(word)) && names.length >= 2) {
+  if (["path", "connect", "between", "linked", "trace", "funds"].some((word) => lowered.includes(word)) && names.length >= 2) {
     calls.push({ name: "graph_path", args: { source: names[0], target: names[1], ego: "" } });
   } else if (["connected", "neighbour", "neighbor", "ego", "network"].some((word) => lowered.includes(word)) && names[0]) {
     calls.push({ name: "graph_path", args: { source: "", target: "", ego: names[0] } });
@@ -128,7 +128,11 @@ function summarise(trace: Trace) {
   }
   if (trace.name === "graph_path") {
     const path = (payload.path as { label?: string; id?: string }[]) ?? [];
-    if (path.length) return `A path on the knowledge graph: ${path.map((node) => node.label || node.id).join(" → ")}.`;
+    if (path.length) {
+      const steps = (payload.steps as { relation?: string; basis?: string }[]) ?? [];
+      const kinds = steps.map((step) => `${step.basis ?? "unknown"} ${step.relation ?? "link"}`).join(", ");
+      return `A path on the knowledge graph: ${path.map((node) => node.label || node.id).join(" → ")}.${kinds ? ` Steps: ${kinds}. Observed steps can be opened in Explore; derived steps are not payments.` : ""}`;
+    }
     const focus = (payload.focus as { label?: string } | undefined)?.label;
     const count = ((payload.nodes as unknown[]) ?? []).length;
     if (focus) return `Ego network around ${focus} has ${count} entities in this depth.`;
@@ -162,7 +166,12 @@ function retrievalQuery(question: string, traces: Trace[]) {
 }
 
 function compose(question: string, traces: Trace[], passages: Passage[]) {
-  const lines = [`Question: ${question.trim()}`, ""];
+  const lines = [
+    "Tool assembly. No model was called. The sentences below are built from the tool results and the bundled guidance notes. They are not a filing recommendation.",
+    "",
+    `Question: ${question.trim()}`,
+    "",
+  ];
   for (const trace of traces) {
     if (trace.name === "retrieve_guidance") continue;
     lines.push(summarise(trace), "");
@@ -227,6 +236,7 @@ export async function runTurn(
     tools.set(item.name, item as { invoke: (input: Record<string, unknown>) => Promise<unknown> });
   }
   const traces: Trace[] = [];
+  emit({ type: "mode", mode: "deterministic", framework: "langchain" });
   for (const call of plan(message)) {
     const selected = tools.get(call.name);
     if (!selected) continue;
@@ -258,9 +268,13 @@ export async function runTurn(
       }
     } catch {
       mode = "deterministic";
+      body = `${body}\n\nThe model call failed. This reply stays the tool assembly.`;
     }
   }
-  emit({ type: "mode", mode, framework: "langchain" });
+  if (mode === "langchain") {
+    emit({ type: "mode", mode, framework: "langchain" });
+    body = `Model answer, restricted to the tool results and guidance notes above.\n\n${body}`;
+  }
   const step = 72;
   for (let index = 0; index < body.length; index += step) emit({ type: "token", text: body.slice(index, index + step) });
   return { answer: body, mode, traces, citations: passages };

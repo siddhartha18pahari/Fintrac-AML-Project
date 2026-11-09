@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const ASSIGNEES = ["Unassigned", "J. Okafor", "S. Rahman", "L. Chen", "D. Vasquez"] as const;
 export const ACTORS = ["J. Okafor", "S. Rahman", "L. Chen", "D. Vasquez"] as const;
@@ -120,11 +120,15 @@ function withAudit(current: Overlay, actor: string, action: string, detail: stri
   };
 }
 
-export function useWorkspace(namespace: string) {
+export function useWorkspace(namespace: string, remoteCaseId?: number) {
   const [map, setMap] = useState<Record<string, Overlay>>({});
   const [ready, setReady] = useState(false);
   const [actor, setActorState] = useState<string>("J. Okafor");
   const [notice, setNotice] = useState("");
+  const [persistence, setPersistence] = useState<"unknown" | "demo-browser" | "postgres">("unknown");
+  const [persistenceReason, setPersistenceReason] = useState("");
+  const remote = persistence === "postgres";
+  const skipSave = useRef(true);
 
   useEffect(() => {
     try {
@@ -139,9 +143,50 @@ export function useWorkspace(namespace: string) {
   }, [namespace]);
 
   useEffect(() => {
+    if (!ready || remoteCaseId == null) return;
+    let cancelled = false;
+    fetch(`/api/cases/${remoteCaseId}/workspace`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { persistence?: "demo-browser" | "postgres"; reason?: string; record?: Overlay | null } | null) => {
+        if (cancelled || !body) return;
+        setPersistence(body.persistence === "postgres" ? "postgres" : "demo-browser");
+        setPersistenceReason(body.reason ?? "");
+        if (body.persistence === "postgres" && body.record) {
+          skipSave.current = true;
+          setMap((current) => ({ ...current, [String(remoteCaseId)]: hydrate(body.record ?? undefined, body.record?.status ?? "NEW", body.record?.disposition ?? null) }));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPersistence("demo-browser");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [namespace, ready, remoteCaseId]);
+
+  useEffect(() => {
     if (!ready) return;
     localStorage.setItem(storageKey(namespace), JSON.stringify(map));
-  }, [map, namespace, ready]);
+    if (!remote || remoteCaseId == null) return;
+    const overlay = map[String(remoteCaseId)];
+    if (!overlay) return;
+    if (skipSave.current) {
+      skipSave.current = false;
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      void fetch(`/api/cases/${remoteCaseId}/workspace`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(overlay),
+      }).then(async (response) => {
+        if (response.ok) return;
+        const body = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
+        setNotice(body?.error?.message ?? "The working file was not stored.");
+      });
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [map, namespace, ready, remote, remoteCaseId]);
 
   function setActor(next: string) {
     setActorState(next);
@@ -243,6 +288,10 @@ export function useWorkspace(namespace: string) {
   }
 
   function decideApproval(caseId: number, status: string, disposition: string | null, decision: "approved" | "rejected", reason: string) {
+    if (remote) {
+      setNotice("Postgres can keep notes and status. It will not store an approval, because choosing a name here does not sign anyone in.");
+      return;
+    }
     const current = overlayFor(caseId, status, disposition);
     if (current.approval.status !== "pending") {
       setNotice("Nothing is waiting for a second pair of eyes.");
@@ -296,6 +345,8 @@ export function useWorkspace(namespace: string) {
     actor,
     setActor,
     notice,
+    persistence,
+    persistenceReason,
     overlayFor,
     assign,
     setStatus,

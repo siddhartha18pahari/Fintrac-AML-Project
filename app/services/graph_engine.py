@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 import networkx as nx
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..models import Customer, Direction, Party, Transaction, Wallet
@@ -430,7 +430,11 @@ def neighbourhood(
     session: Session, node: str, *, hops: int = 2, since: datetime | None = None
 ) -> GraphView:
     """A bounded subgraph around one node, for the investigator UI."""
-    since = since or (utcnow() - timedelta(days=90))
+    if since is None:
+        # Anchor on the ledger, not the wall clock. A book whose last
+        # transaction is older than 90 days would otherwise draw an empty graph.
+        latest = session.execute(select(func.max(Transaction.occurred_at))).scalar_one_or_none()
+        since = (latest or utcnow()) - timedelta(days=90)
     view = build_graph(session, since=since)
     if node not in view.graph:
         return GraphView(graph=nx.MultiDiGraph())
